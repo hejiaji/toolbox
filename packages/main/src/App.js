@@ -6,9 +6,6 @@ function App() {
     return (
         <Router>
             <Routes />
-            <div className="App">
-                Hello World
-            </div>
         </Router>
     );
 }
