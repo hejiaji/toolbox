@@ -8,15 +8,11 @@
     "@testing-library/user-event": "^12.1.10",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "4.0.3",
     "web-vitals": "^1.0.1",
-    "@toolbox/who-goes-first": "^0.1.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "webpack": "4.44.2",
+    "webpack-dev-server": "3.11.1",
+    "webpack-manifest-plugin": "2.2.0",
+    "workbox-webpack-plugin": "5.1.4"
   },
   "eslintConfig": {
     "extends": [
@@ -34,6 +30,11 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
+    ]
+  },
+  "babel": {
+    "presets": [
+      "react-app"
     ]
   }
 }
