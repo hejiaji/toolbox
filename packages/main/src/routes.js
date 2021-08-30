@@ -9,7 +9,7 @@ import { WhoGoesFirst } from "@toolbox/who-goes-first"
 export const Routes = () => {
     return (
         <Switch>
-            <Route path="/who-goes-first" component={WhoGoesFirst} />
+            <Route path="/who-goes-first" exact component={WhoGoesFirst} />
         </Switch>
     )
 };
