@@ -58,7 +58,7 @@ function WhoGoesFirst() {
         return (
             <List.Item>
                 {item}
-                {hasResult && <Progress percent={playersMap[item]} />}
+                <Progress percent={playersMap[item] || 0} />
             </List.Item>
         )
     }
