@@ -38,6 +38,21 @@ function WhoGoesFirst() {
 
     const hasResult = Object.keys(playersMap).length > 0;
 
+    const graduallySetPlayResult = (finalResult, count) => {
+        if (count <= 0) {
+            return;
+        }
+        let result = {};
+        const playerNames = Object.keys(finalResult);
+        for (let i = 0; i < playerNames.length; i++) {
+            result[playerNames[i]] = (finalResult[playerNames[i]] * (10 - count + 1)) / 10;
+        }
+        setPlayersMap(result);
+        setTimeout(() => {
+            graduallySetPlayResult(finalResult, count-1);
+        }, 50);
+    }
+
     const handleBtnStart = () => {
         const result = {};
         let maxIndex = -1;
@@ -51,7 +66,7 @@ function WhoGoesFirst() {
             }
         }
         result[players[maxIndex]] = 100;
-        setPlayersMap(result);
+        graduallySetPlayResult(result, 10);
     };
 
     const renderPlayer = (item) => {
