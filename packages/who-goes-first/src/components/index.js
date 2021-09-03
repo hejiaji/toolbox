@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Typography, Divider, Input, Button, List, Result } from "antd";
+import { Typography, Divider, Input, Button, List, Result, Progress } from "antd";
 
 const { Title } = Typography;
 
@@ -28,7 +28,7 @@ function getRandomInt(min, max) {
 function WhoGoesFirst() {
     const [players, setPlayers] = useState([]);
     const [inputValue, setInputValue] = useState("");
-    const [playersOrder, setPlayersOrder] = useState([]);
+    const [playersMap, setPlayersMap] = useState([]);
 
     const handPlayersAdd = () => {
         const newPlayers = inputValue.split(",")
@@ -36,35 +36,43 @@ function WhoGoesFirst() {
         setPlayers([...new Set(allPlayers)]);
     };
 
+    const hasResult = Object.keys(playersMap).length > 0;
+
     const handleBtnStart = () => {
-        const result = [];
-        let remainingPlayers = [...players];
-        while (remainingPlayers.length > 0) {
-            const picked = getRandomInt(0, remainingPlayers.length);
-            const pickedPlayer = remainingPlayers[picked];
-            result.push(pickedPlayer);
-            remainingPlayers = remainingPlayers.filter(x => x !== pickedPlayer)
+        const result = {};
+        let maxIndex = -1;
+        let maxPoint = -1;
+        for (let i = 0; i < players.length; i++) {
+            const score = getRandomInt(1, 101);
+            result[players[i]] = score;
+            if (score > maxPoint) {
+                maxIndex = i;
+                maxPoint = score;
+            }
         }
-        setPlayersOrder(result);
+        result[players[maxIndex]] = 100;
+        setPlayersMap(result);
     };
 
     const renderPlayer = (item) => {
         return (
             <List.Item>
                 {item}
+                {hasResult && <Progress percent={playersMap[item]} />}
             </List.Item>
         )
     }
 
     const renderResult = () => {
-        if (playersOrder.length === 0) {
+        if (!hasResult) {
             return null;
         }
+        const sortedPlayers = Object.keys(playersMap).sort((x, y) => playersMap[y] - playersMap[x]);
         return (
             <Result
                 status="success"
-                title={`${playersOrder[0]} goes first!`}
-                subTitle={`In order: ${playersOrder.join(",")}`}
+                title={`${sortedPlayers[0]} goes first!`}
+                subTitle={`In order: ${sortedPlayers.join(",")}`}
             />
         )
     }
