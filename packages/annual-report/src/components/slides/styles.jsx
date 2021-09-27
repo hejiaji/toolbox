@@ -27,7 +27,7 @@ export const H2 = styled(motion.h2)`
 `;
 
 export const List = styled(motion.ul)`
-  font-size: 1.25rem;
+  font-size: 1rem;
   position: relative;
   list-style-type: none;
 `;
