@@ -3,10 +3,11 @@
   "private": true,
   "homepage": "https://hejiaji.cn/toolbox",
   "devDependencies": {
-    "lerna": "^4.0.0",
-    "gh-pages": "^3.2.3"
+    "gh-pages": "^3.2.3",
+    "lerna": "^4.0.0"
   },
   "dependencies": {
+    "@ant-design/icons": "^4.7.0",
     "@babel/core": "7.12.3",
     "@babel/preset-react": "^7.14.5",
     "@pmmmwh/react-refresh-webpack-plugin": "0.4.3",
@@ -47,6 +48,7 @@
     "jest-resolve": "26.6.0",
     "jest-watch-typeahead": "0.6.1",
     "mini-css-extract-plugin": "0.11.3",
+    "moment": "^2.29.3",
     "optimize-css-assets-webpack-plugin": "5.0.4",
     "pnp-webpack-plugin": "1.6.4",
     "postcss-flexbugs-fixes": "4.2.1",
