@@ -62,7 +62,7 @@ const StyledItem = styled(({ isSelected, ...props }) => <List.Item {...props} />
 
 
 
-const data = [{ title: "陈记土豆丝" }, { title: "麻婆豆腐" }, { title: "镜面蒸蛋羹" }, { title: "水煮鱼" }]
+const data = [{ title: "陈记土豆丝" }, { title: "麻婆豆腐" }, { title: "镜面蒸蛋羹" }, { title: "水煮鱼" }, { title: "意大利面"}]
 const avatarUrl = "https://joeschmoe.io/api/v1/jake";
 
 function ZhihaoKitchen() {
