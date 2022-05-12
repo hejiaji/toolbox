@@ -79,6 +79,7 @@ function ZhihaoKitchen() {
     const handleSubmit = () => {
         if(items.length === 0 || !date) {
             message.error("请选择菜品和日期");
+            return;
         }
         const dish = items.reduce((sum, item) => {
             return `${sum}${item}\n`
