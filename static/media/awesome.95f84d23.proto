@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package paas.sharding.v1;
+
+message ShardingContext {
+  ContextId context_id = 1;
+  optional Partition partition = 2;
+}
+
+message ContextId {
+  oneof value {
+    string ari = 1;
+  }
+}
+
+message Partition {
+  oneof id {
+    string id_as_string = 1;
+  }
+}
