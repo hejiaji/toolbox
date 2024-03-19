@@ -26,7 +26,7 @@ const Container = styled.div`
 
 const StyledShardingInput = styled(Input)`
     margin-top: 3rem;
-    width: 500px;
+    max-width: 500px;
 `;
 
 const StyledContent = styled.div`
