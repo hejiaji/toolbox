@@ -1,0 +1,9 @@
+{
+  "name": "@toolbox/sharding-helper",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "protobufjs": "^7.2.6",
+    "styled-components": "^5.3.1"
+  }
+}
