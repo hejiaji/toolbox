@@ -1,15 +1,101 @@
 @import '~antd/dist/antd.css';
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap");
+
+:root {
+  --google-blue: #1a73e8;
+  --google-gray: #5f6368;
+  --google-ink: #202124;
+  --google-border: #dadce0;
+  --google-surface: #ffffff;
+  --google-bg: #f8f9fa;
+}
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: "Roboto", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--google-bg);
+  color: var(--google-ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--google-blue);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--google-surface);
+  border-bottom: 1px solid var(--google-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  font-size: 0.95rem;
+}
+
+.app-nav a {
+  color: var(--google-gray);
+  padding: 0.35rem 0.1rem;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.app-nav a:hover {
+  color: var(--google-blue);
+  border-bottom-color: rgba(26, 115, 232, 0.4);
+}
+
+.app-nav a:focus-visible {
+  outline: 2px solid rgba(26, 115, 232, 0.3);
+  outline-offset: 2px;
+}
+
+.app-main {
+  padding: 1.5rem 0 3rem;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: "Roboto Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    padding: 0.85rem 1.25rem;
+  }
+
+  .app-title {
+    width: 100%;
+  }
+
+  .app-nav {
+    width: 100%;
+  }
 }
