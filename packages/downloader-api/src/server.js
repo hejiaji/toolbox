@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 
+// Install deps: yarn --cwd packages/downloader-api install
+
 const app = express();
 const port = process.env.PORT || 4000;
 

@@ -97,6 +97,11 @@ const extractFirstUrl = (inputValue) => {
   return "";
 };
 
+const API_BASE_URL =
+  process.env.IS_LOCAL !== "true"
+    ? "https://toolbox-downloader.onrender.com"
+    : "http://localhost:4000";
+
 const resolveRawVideoUrl = async (inputValue, debugEnabled) => {
   const sharedUrl = extractFirstUrl(inputValue);
   if (!sharedUrl) {
@@ -107,11 +112,8 @@ const resolveRawVideoUrl = async (inputValue, debugEnabled) => {
     ? sharedUrl
     : `https://${sharedUrl}`;
 
-  const url = debugEnabled
-    ? "http://localhost:4000/api/resolve?debug=1"
-    : "http://localhost:4000/api/resolve";
-
-  const response = await fetch(url, {
+  const endpoint = debugEnabled ? "/api/resolve?debug=1" : "/api/resolve";
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url: normalizedUrl }),
