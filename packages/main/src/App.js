@@ -38,6 +38,13 @@ const TOOL_ITEMS = [
         tag: "Batch tool",
         accent: "#8a5cc7",
     },
+    {
+        path: "/sync-input",
+        title: "Sync Input",
+        description: "Paste once, retrieve anywhere. A shared notebook for quick text sync.",
+        tag: "Sync notebook",
+        accent: "#cf6d2a",
+    },
 ];
 
 const ToolIndex = () => {
