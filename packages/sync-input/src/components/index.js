@@ -143,7 +143,7 @@ const POLL_INTERVAL_MS = 3000;
 const API_BASE_URL =
     process.env.IS_LOCAL === "true"
         ? "http://localhost:4001"
-        : "https://toolbox-sync-input.onrender.com";
+        : "https://toolbox-sync.onrender.com";
 
 const loadStoredState = () => {
     if (typeof window === "undefined") {
