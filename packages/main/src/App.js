@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { HashRouter as Router, Link, useLocation } from "react-router-dom";
 import { Routes } from "./routes";
 
@@ -9,20 +9,6 @@ const TOOL_ITEMS = [
         description: "Break ties and pick the next driver, speaker, or owner in seconds.",
         tag: "Decision helper",
         accent: "#e76f37",
-    },
-    {
-        path: "/annual-report",
-        title: "Annual Report",
-        description: "Assemble a clean narrative for yearly highlights and milestones.",
-        tag: "Story builder",
-        accent: "#2b8f7a",
-    },
-    {
-        path: "/zhihao-kitchen",
-        title: "Zhihao Kitchen",
-        description: "Plan meals, track prep, and keep kitchen rhythms in sync.",
-        tag: "Kitchen ops",
-        accent: "#d69a2b",
     },
     {
         path: "/sharding",
@@ -47,7 +33,31 @@ const TOOL_ITEMS = [
     },
 ];
 
+const INTERNAL_ITEMS = [
+    {
+        path: "/annual-report",
+        title: "Annual Report",
+        description: "Assemble a clean narrative for yearly highlights and milestones.",
+        tag: "Story builder",
+        accent: "#2b8f7a",
+    },
+    {
+        path: "/zhihao-kitchen",
+        title: "Zhihao Kitchen",
+        description: "Plan meals, track prep, and keep kitchen rhythms in sync.",
+        tag: "Kitchen ops",
+        accent: "#d69a2b",
+    },
+];
+
 const ToolIndex = () => {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const contentRef = useRef(null);
+
+    const toggle = useCallback(() => {
+        setInternalOpen((prev) => !prev);
+    }, []);
+
     return (
         <section className="tool-index">
             <div className="tool-hero">
@@ -82,6 +92,46 @@ const ToolIndex = () => {
                         <div className="tool-card__cta">Open tool</div>
                     </Link>
                 ))}
+            </div>
+
+            <div className={`tool-section-collapse ${internalOpen ? "tool-section-collapse--open" : ""}`}>
+                <button
+                    className="tool-section-collapse__summary"
+                    onClick={toggle}
+                    aria-expanded={internalOpen}
+                >
+                    <span className="tool-section-collapse__arrow">&#9654;</span>
+                    <h2 className="tool-section-collapse__title">Hidden</h2>
+                </button>
+                <div
+                    className="tool-section-collapse__body"
+                    ref={contentRef}
+                    style={{
+                        maxHeight: internalOpen
+                            ? `${contentRef.current?.scrollHeight || 0}px`
+                            : "0px",
+                    }}
+                >
+                    <p className="tool-section-collapse__desc">These tools are for internal use and testing purposes.</p>
+                    <div className="tool-grid">
+                        {INTERNAL_ITEMS.map((tool, index) => (
+                            <Link
+                                key={tool.path}
+                                to={tool.path}
+                                className="tool-card"
+                                style={{
+                                    "--card-accent": tool.accent,
+                                    "--card-index": index,
+                                }}
+                            >
+                                <div className="tool-card__tag">{tool.tag}</div>
+                                <h2 className="tool-card__title">{tool.title}</h2>
+                                <p className="tool-card__desc">{tool.description}</p>
+                                <div className="tool-card__cta">Open tool</div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <div className="tool-index__footer">

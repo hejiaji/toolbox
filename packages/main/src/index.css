@@ -160,8 +160,12 @@ a:hover {
 
 .tool-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1.2rem;
+}
+
+.tool-grid .tool-card {
+  height: 220px;
 }
 
 .tool-card {
@@ -241,6 +245,67 @@ a:hover {
 
 .tool-card__cta::after {
   content: "→";
+}
+
+.tool-section-collapse {
+  border-top: 1px solid var(--chrome-border);
+  padding-top: 0.5rem;
+}
+
+.tool-section-collapse__summary {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  user-select: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tool-section-collapse__summary:focus-visible {
+  outline: 2px solid var(--chrome-blue);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.tool-section-collapse__arrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+  color: var(--chrome-muted);
+}
+
+.tool-section-collapse--open .tool-section-collapse__arrow {
+  transform: rotate(90deg);
+}
+
+.tool-section-collapse__title {
+  font-family: var(--chrome-font-display);
+  font-size: 1.2rem;
+  margin: 0;
+  color: var(--chrome-muted);
+}
+
+.tool-section-collapse__body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.tool-section-collapse--open .tool-section-collapse__body {
+  opacity: 1;
+}
+
+.tool-section-collapse__desc {
+  font-size: 0.9rem;
+  color: var(--chrome-muted);
+  margin: 0.5rem 0 0 1.25rem;
+}
+
+.tool-section-collapse .tool-grid {
+  margin-top: 1.5rem;
 }
 
 .tool-index__footer {
