@@ -31,6 +31,13 @@ const TOOL_ITEMS = [
         tag: "Sync notebook",
         accent: "#cf6d2a",
     },
+    {
+        path: "/video",
+        title: "Video",
+        description: "Play videos from pre-signed S3 URLs directly in the browser.",
+        tag: "Media player",
+        accent: "#c0392b",
+    },
 ];
 
 const INTERNAL_ITEMS = [
