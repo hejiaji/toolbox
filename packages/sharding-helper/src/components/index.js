@@ -79,7 +79,7 @@ const ShardingHelper = () => {
                 console.log(e);
             }
         }
-    }, [ari, partitionId]);
+    }, [ari, partitionId, shardingParser]);
 
     const handleDecodeInputChange = (sharding) => {
         if (shardingParser) {

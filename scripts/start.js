@@ -94,9 +94,9 @@ checkBrowsers(paths.appPath, isInteractive)
     );
     const devSocket = {
       warnings: warnings =>
-        devServer.sockWrite(devServer.sockets, 'warnings', warnings),
+        devServer.sendMessage(devServer.webSocketServer.clients, 'warnings', warnings),
       errors: errors =>
-        devServer.sockWrite(devServer.sockets, 'errors', errors),
+        devServer.sendMessage(devServer.webSocketServer.clients, 'errors', errors),
     };
     // Create a webpack compiler that is configured with custom messages.
     const compiler = createCompiler({
