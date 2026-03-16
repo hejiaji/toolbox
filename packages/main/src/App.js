@@ -150,8 +150,9 @@ const ToolIndex = () => {
 
 const AppLayout = () => {
     const location = useLocation();
-    const showTopBar = location.pathname !== "/";
+    const showTopBar = location.pathname !== "/" && !location.pathname.startsWith("/video");
     const showIndex = location.pathname === "/";
+    const isVideo = location.pathname.startsWith("/video");
 
     return (
         <div className="app-shell">
@@ -161,7 +162,7 @@ const AppLayout = () => {
                     <Link to="/" className="app-topbar__link">All tools</Link>
                 </header>
             ) : null}
-            <main className="app-main">
+            <main className="app-main" style={isVideo ? { padding: 0 } : {}}>
                 {showIndex ? <ToolIndex /> : null}
                 <Routes />
             </main>
