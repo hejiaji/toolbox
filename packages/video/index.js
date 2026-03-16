@@ -1,3 +1,3 @@
-import { VideoPlayer } from "./src/components/index";
+import { VideoLibrary } from "./src/components/index";
 
-export { VideoPlayer };
+export { VideoLibrary };

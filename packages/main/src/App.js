@@ -34,8 +34,8 @@ const TOOL_ITEMS = [
     {
         path: "/video",
         title: "Video",
-        description: "Play videos from pre-signed S3 URLs directly in the browser.",
-        tag: "Media player",
+        description: "Your personal Netflix-style video library. Browse, search and watch your collection.",
+        tag: "Video library",
         accent: "#c0392b",
     },
 ];
