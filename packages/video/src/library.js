@@ -81,8 +81,8 @@ export const VIDEO_LIBRARY = [
     id: "7",
     title: "第75届NHK红白歌合战",
     description: "第75回NHK紅白歌合戰（日語：第75回NHK紅白歌合戦）於日本時間2024年12月31日下午7時20分至11時45分在日本東京的NHK大廳以现場直播的方式舉行.",
-    category: "Movies",   // or "TV Shows"
-    thumbnail: "https://tx-free-imgs.acfun.cn/newUpload/76142336_2c438ab73f8d4eaf83375194da2e8db4.jpeg?imageslim&imageView2/1/w/375/h/211",        // leave empty if no thumbnail, a ▶ placeholder will show
+    category: "Movies",
+    thumbnail: "https://upload.wikimedia.org/wikipedia/en/thumb/7/7c/Kouhaku_2024_Visuals.png/330px-Kouhaku_2024_Visuals.png",
     src: "https://jeremy-he-video.s3.ap-southeast-2.amazonaws.com/%E7%AC%AC75%E5%B1%8ANHK%E7%BA%A2%E7%99%BD%E6%AD%8C%E5%90%88%E6%88%98+%E7%8C%AE%E7%BB%99%E4%BD%A0%E7%9A%84%E6%AD%8C+%E5%85%A8%E5%9C%BA%E4%B8%AD%E5%AD%97%40NHK+BSP4K.mp4",
     year: 2025,
     duration: "4h 25m",
