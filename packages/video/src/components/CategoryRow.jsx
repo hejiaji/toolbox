@@ -10,8 +10,12 @@ const RowHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 1rem;
   margin-bottom: 0.75rem;
+
+  @media (max-width: 600px) {
+    padding: 0 0.75rem;
+  }
 `;
 
 const CategoryTitle = styled.h2`
@@ -45,20 +49,18 @@ const Row = styled.div`
   display: flex;
   gap: 0.75rem;
   overflow-x: auto;
-  padding: 0.5rem 1.5rem 1rem;
+  padding: 0.5rem 1rem 1rem;
   scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
-    height: 4px;
+    display: none;
   }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 2px;
+
+  @media (max-width: 600px) {
+    padding: 0.5rem 0.75rem 0.75rem;
+    gap: 0.5rem;
   }
 `;
 

@@ -14,12 +14,17 @@ const TopBar = styled.div`
   position: sticky;
   top: 0;
   z-index: 100;
-  background: linear-gradient(to bottom, #141414 80%, transparent);
-  padding: 1rem 1.5rem;
+  background: #141414;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    padding: 0.6rem 0.75rem;
+    gap: 0.5rem;
+  }
 `;
 
 const LibraryTitle = styled.div`
@@ -40,6 +45,8 @@ const SearchInput = styled.input`
   outline: none;
   width: 220px;
   transition: border-color 0.2s, background 0.2s;
+  flex: 1;
+  min-width: 0;
 
   &::placeholder {
     color: #888;
@@ -49,12 +56,22 @@ const SearchInput = styled.input`
     border-color: #e50914;
     background: rgba(255, 255, 255, 0.15);
   }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    font-size: 16px; /* prevents iOS auto-zoom */
+  }
 `;
 
 const FilterTabs = styled.div`
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+  width: 100%;
+
+  @media (max-width: 600px) {
+    gap: 0.35rem;
+  }
 `;
 
 const Tab = styled.button`
@@ -67,14 +84,25 @@ const Tab = styled.button`
   font-weight: ${({ $active }) => ($active ? "700" : "400")};
   cursor: pointer;
   transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 
   &:hover {
     background: ${({ $active }) => ($active ? "#b20710" : "rgba(255,255,255,0.2)")};
   }
+
+  @media (max-width: 600px) {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+  }
 `;
 
 const Content = styled.div`
-  padding: 1.5rem 0 3rem;
+  padding: 1.5rem 0 2rem;
+
+  @media (max-width: 600px) {
+    padding: 1rem 0 1.5rem;
+  }
 `;
 
 const EmptyState = styled.div`

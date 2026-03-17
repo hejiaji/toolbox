@@ -17,7 +17,11 @@ const Banner = styled.div`
   align-items: flex-end;
 
   @media (max-width: 768px) {
-    height: 340px;
+    height: 300px;
+  }
+
+  @media (max-width: 480px) {
+    height: 240px;
   }
 `;
 
@@ -33,7 +37,20 @@ const BgImage = styled.div`
 const BgFallback = styled.div`
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 50%, #2a0a0a 100%);
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const FallbackHeroIcon = styled.div`
+  font-size: 6rem;
+  opacity: 0.08;
+  user-select: none;
+
+  @media (max-width: 480px) {
+    font-size: 4rem;
+  }
 `;
 
 const Gradient = styled.div`
@@ -60,8 +77,12 @@ const Content = styled.div`
   animation: ${fadeIn} 0.6s ease both;
 
   @media (max-width: 768px) {
-    padding: 1.5rem;
+    padding: 1.25rem 1rem;
     max-width: 100%;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem;
   }
 `;
 
@@ -78,12 +99,17 @@ const Title = styled.h1`
   color: #fff;
   font-size: 2.8rem;
   font-weight: 800;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
   line-height: 1.1;
   text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
 
   @media (max-width: 768px) {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.2rem;
+    margin: 0 0 0.3rem;
   }
 `;
 
@@ -108,7 +134,7 @@ const Description = styled.p`
   color: #ccc;
   font-size: 0.95rem;
   line-height: 1.5;
-  margin: 0 0 1.5rem;
+  margin: 0 0 1rem;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -116,7 +142,12 @@ const Description = styled.p`
 
   @media (max-width: 768px) {
     -webkit-line-clamp: 2;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+    margin: 0 0 0.75rem;
+  }
+
+  @media (max-width: 480px) {
+    display: none;
   }
 `;
 
@@ -136,10 +167,17 @@ const PlayButton = styled.button`
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 
   &:hover {
     background: #b20710;
     transform: scale(1.03);
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.85rem;
   }
 `;
 
@@ -154,9 +192,16 @@ const InfoButton = styled.button`
   cursor: pointer;
   transition: background 0.15s;
   backdrop-filter: blur(4px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 
   &:hover {
     background: rgba(255, 255, 255, 0.25);
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
   }
 `;
 
@@ -174,7 +219,9 @@ const HeroBanner = ({ video }) => {
           onError={() => setImgError(true)}
         />
       ) : (
-        <BgFallback />
+        <BgFallback>
+          <FallbackHeroIcon>🎬</FallbackHeroIcon>
+        </BgFallback>
       )}
       <Gradient />
       <Content>

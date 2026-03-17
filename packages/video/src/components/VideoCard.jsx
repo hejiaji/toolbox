@@ -10,11 +10,21 @@ const Card = styled.div`
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   background: #1a1a1a;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 
   &:hover {
     transform: scale(1.08);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
     z-index: 10;
+  }
+
+  @media (max-width: 600px) {
+    flex: 0 0 150px;
+  }
+
+  @media (max-width: 380px) {
+    flex: 0 0 130px;
   }
 `;
 
@@ -36,11 +46,24 @@ const FallbackThumb = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  gap: 0.4rem;
+`;
+
+const FallbackIcon = styled.div`
+  font-size: 2rem;
   color: #e50914;
-  font-size: 2.5rem;
+  line-height: 1;
+`;
+
+const FallbackLabel = styled.div`
+  font-size: 0.65rem;
+  color: #666;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 `;
 
 const Overlay = styled.div`
@@ -124,7 +147,10 @@ const VideoCard = ({ video }) => {
             onError={() => setImgError(true)}
           />
         ) : (
-          <FallbackThumb>▶</FallbackThumb>
+          <FallbackThumb>
+            <FallbackIcon>🎬</FallbackIcon>
+            <FallbackLabel>No Thumbnail</FallbackLabel>
+          </FallbackThumb>
         )}
       </Thumbnail>
       <Overlay>

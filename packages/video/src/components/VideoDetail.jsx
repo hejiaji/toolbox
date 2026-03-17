@@ -16,8 +16,12 @@ const TopBar = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 2rem;
-  background: linear-gradient(to bottom, #0a0a0a, transparent);
+  padding: 0.75rem 1rem;
+  background: #0a0a0a;
+
+  @media (max-width: 600px) {
+    padding: 0.6rem 0.75rem;
+  }
 `;
 
 const BackBtn = styled.button`
@@ -55,7 +59,11 @@ const PlayerSection = styled.div`
 const InfoSection = styled.div`
   max-width: 860px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem 1.5rem 2rem;
+
+  @media (max-width: 600px) {
+    padding: 1rem 0.75rem 2rem;
+  }
 `;
 
 const Title = styled.h1`
@@ -64,7 +72,11 @@ const Title = styled.h1`
   margin: 0 0 0.5rem;
 
   @media (max-width: 600px) {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
+  }
+
+  @media (max-width: 380px) {
+    font-size: 1.1rem;
   }
 `;
 
@@ -127,8 +139,36 @@ const SuggestionsGrid = styled.div`
   gap: 0.75rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
-  scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    gap: 0.5rem;
+  }
+`;
+
+const SuggThumbFallback = styled.div`
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  font-size: 1.5rem;
+  color: #e50914;
+  gap: 0.3rem;
+
+  span {
+    font-size: 0.6rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
 `;
 
 const SuggCard = styled.div`
@@ -138,6 +178,8 @@ const SuggCard = styled.div`
   overflow: hidden;
   background: #1a1a1a;
   transition: transform 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 
   &:hover {
     transform: scale(1.05);
@@ -158,6 +200,10 @@ const SuggCard = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  @media (max-width: 600px) {
+    flex: 0 0 140px;
   }
 `;
 
@@ -249,7 +295,16 @@ const VideoDetail = () => {
             <SuggestionsGrid>
               {suggestions.map((s) => (
                 <SuggCard key={s.id} onClick={() => history.push(`/video/${s.id}`)}>
-                  <img src={s.thumbnail} alt={s.title} />
+                  {s.thumbnail ? (
+                    <img
+                      src={s.thumbnail}
+                      alt={s.title}
+                      onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+                    />
+                  ) : null}
+                  <SuggThumbFallback style={{ display: s.thumbnail ? "none" : "flex" }}>
+                    🎬<span>No Thumbnail</span>
+                  </SuggThumbFallback>
                   <div>{s.title}</div>
                 </SuggCard>
               ))}
