@@ -11,6 +11,7 @@ import { ShardingHelper } from "@toolbox/sharding-helper";
 import { Downloader } from "@toolbox/downloader";
 import { SyncInput } from "@toolbox/sync-input";
 import { VideoLibrary } from "@toolbox/video";
+import { GameAnalysis } from "@toolbox/game-analysis";
 
 export const Routes = () => {
     return (
@@ -22,6 +23,7 @@ export const Routes = () => {
             <Route path="/downloader" exact component={Downloader}  />
             <Route path="/sync-input" exact component={SyncInput}  />
             <Route path="/video" component={VideoLibrary}  />
+            <Route path="/game-analysis" exact component={GameAnalysis}  />
         </Switch>
     )
 };

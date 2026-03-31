@@ -4,6 +4,13 @@ import { Routes } from "./routes";
 
 const TOOL_ITEMS = [
     {
+        path: "/game-analysis",
+        title: "Game Analysis",
+        description: "Record werewolf games, track player stats, and analyse role win rates.",
+        tag: "Board game analytics",
+        accent: "#7c3aed",
+    },
+    {
         path: "/who-goes-first",
         title: "Who Goes First",
         description: "Break ties and pick the next driver, speaker, or owner in seconds.",
