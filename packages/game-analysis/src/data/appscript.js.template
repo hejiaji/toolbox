@@ -1,0 +1,225 @@
+/**
+ * Google Apps Script — deploy as a web app to handle writes to the spreadsheet.
+ *
+ * Setup:
+ * 1. Open your Google Sheet → Extensions → Apps Script
+ * 2. Replace the default Code.gs with this entire file
+ * 3. Deploy → New Deployment → Web App
+ *    - Execute as: "Me"
+ *    - Who has access: "Anyone"
+ * 4. Copy the deployment URL into sheetsConfig.js → APPS_SCRIPT_URL
+ *
+ * Supported actions: addPlayer, removePlayer, addGame, deleteGame, addRole, removeRole, importData
+ */
+
+const PLAYERS_SHEET = "Players";
+const GAMES_SHEET = "Games";
+const ROLES_SHEET = "Roles";
+
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+    var action = body.action;
+
+    switch (action) {
+      case "addPlayer":
+        return jsonOk(handleAddPlayer(body.name));
+      case "removePlayer":
+        return jsonOk(handleRemovePlayer(body.name));
+      case "addGame":
+        return jsonOk(handleAddGame(body));
+      case "deleteGame":
+        return jsonOk(handleDeleteGame(body.id));
+      case "addRole":
+        return jsonOk(handleAddRole(body));
+      case "removeRole":
+        return jsonOk(handleRemoveRole(body.key));
+      case "importData":
+        return jsonOk(handleImportData(body));
+      default:
+        return jsonError("Unknown action: " + action);
+    }
+  } catch (err) {
+    return jsonError(err.toString());
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "ok", message: "Werewolf Game Data API" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Action handlers                                                    */
+/* ------------------------------------------------------------------ */
+
+function handleAddPlayer(name) {
+  if (!name || !name.trim()) return { error: "Empty player name" };
+
+  var sheet = getSheet(PLAYERS_SHEET);
+  var data = sheet.getDataRange().getValues();
+  var trimmed = name.trim();
+
+  // Check for duplicates (skip header)
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === trimmed) {
+      return { result: "already_exists" };
+    }
+  }
+
+  sheet.appendRow([trimmed]);
+  return { result: "added", name: trimmed };
+}
+
+function handleRemovePlayer(name) {
+  var sheet = getSheet(PLAYERS_SHEET);
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === name) {
+      sheet.deleteRow(i + 1); // 1-indexed
+      return { result: "removed", name: name };
+    }
+  }
+  return { result: "not_found" };
+}
+
+function handleAddGame(body) {
+  var sheet = getSheet(GAMES_SHEET);
+  sheet.appendRow([body.id, body.date, body.winner, body.players]);
+  return { result: "added", id: body.id };
+}
+
+function handleDeleteGame(gameId) {
+  var sheet = getSheet(GAMES_SHEET);
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === gameId) {
+      sheet.deleteRow(i + 1);
+      return { result: "deleted", id: gameId };
+    }
+  }
+  return { result: "not_found" };
+}
+
+function handleAddRole(body) {
+  if (!body.key || !body.name) return { error: "Missing role key or name" };
+
+  var sheet = getSheet(ROLES_SHEET);
+  var data = sheet.getDataRange().getValues();
+
+  // Check for duplicates by key (skip header)
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === body.key) {
+      return { result: "already_exists" };
+    }
+  }
+
+  sheet.appendRow([body.key, body.name, body.faction || "villager"]);
+  return { result: "added", key: body.key, name: body.name };
+}
+
+function handleRemoveRole(roleKey) {
+  var sheet = getSheet(ROLES_SHEET);
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === roleKey) {
+      sheet.deleteRow(i + 1);
+      return { result: "removed", key: roleKey };
+    }
+  }
+  return { result: "not_found" };
+}
+
+function handleImportData(body) {
+  var playersAdded = 0;
+  var gamesAdded = 0;
+
+  // Import players
+  if (body.players && body.players.length > 0) {
+    var pSheet = getSheet(PLAYERS_SHEET);
+    var existingPlayers = getColumnValues(pSheet, 0);
+
+    body.players.forEach(function(name) {
+      if (name && existingPlayers.indexOf(name) === -1) {
+        pSheet.appendRow([name]);
+        existingPlayers.push(name);
+        playersAdded++;
+      }
+    });
+  }
+
+  // Import games
+  if (body.games && body.games.length > 0) {
+    var gSheet = getSheet(GAMES_SHEET);
+    var existingIds = getColumnValues(gSheet, 0);
+
+    body.games.forEach(function(game) {
+      if (game.id && existingIds.indexOf(game.id) === -1) {
+        gSheet.appendRow([game.id, game.date, game.winner, game.players]);
+        existingIds.push(game.id);
+        gamesAdded++;
+      }
+    });
+  }
+
+  // Import custom roles
+  if (body.customRoles && body.customRoles.length > 0) {
+    var rSheet = getSheet(ROLES_SHEET);
+    var existingKeys = getColumnValues(rSheet, 0);
+
+    body.customRoles.forEach(function(role) {
+      if (role.key && existingKeys.indexOf(role.key) === -1) {
+        rSheet.appendRow([role.key, role.name, role.faction || "villager"]);
+        existingKeys.push(role.key);
+      }
+    });
+  }
+
+  return { result: "imported", playersAdded: playersAdded, gamesAdded: gamesAdded };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function getSheet(name) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    // Auto-create the sheet with headers
+    sheet = ss.insertSheet(name);
+    if (name === PLAYERS_SHEET) {
+      sheet.appendRow(["name"]);
+    } else if (name === GAMES_SHEET) {
+      sheet.appendRow(["id", "date", "winner", "players"]);
+    } else if (name === ROLES_SHEET) {
+      sheet.appendRow(["key", "name", "faction"]);
+    }
+  }
+  return sheet;
+}
+
+function getColumnValues(sheet, colIndex) {
+  var data = sheet.getDataRange().getValues();
+  var values = [];
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][colIndex]) values.push(data[i][colIndex]);
+  }
+  return values;
+}
+
+function jsonOk(result) {
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonError(message) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ error: message }))
+    .setMimeType(ContentService.MimeType.JSON);
+}

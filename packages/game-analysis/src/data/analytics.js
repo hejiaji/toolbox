@@ -45,8 +45,11 @@ export const getPlayerStats = (games) => {
             const stat = map[p.name];
             stat.gamesPlayed += 1;
 
+            // Determine faction from primary role (or either role in double-identity)
             const faction = getFactionForRole(p.role);
-            const playerIsWolfSide = faction === FACTIONS.WOLF;
+            const faction2 = p.role2 ? getFactionForRole(p.role2) : null;
+            // Player is wolf-side if either role is wolf
+            const playerIsWolfSide = faction === FACTIONS.WOLF || faction2 === FACTIONS.WOLF;
             const won = playerIsWolfSide === isWolfWin;
 
             if (won) {
@@ -59,7 +62,11 @@ export const getPlayerStats = (games) => {
                 stat.survived += 1;
             }
 
+            // Track both roles
             stat.roles[p.role] = (stat.roles[p.role] || 0) + 1;
+            if (p.role2) {
+                stat.roles[p.role2] = (stat.roles[p.role2] || 0) + 1;
+            }
         });
     });
 
@@ -83,23 +90,31 @@ export const getRoleStats = (games) => {
         const isWolfWin = game.winner === WINNING_FACTIONS.WOLF;
 
         game.players.forEach((p) => {
-            if (!map[p.role]) {
-                map[p.role] = { roleKey: p.role, timesPlayed: 0, wins: 0, survived: 0 };
-            }
-            const stat = map[p.role];
-            stat.timesPlayed += 1;
+            // Collect all roles this player had (1 or 2 in double-identity)
+            const roles = [p.role];
+            if (p.role2) roles.push(p.role2);
 
-            const faction = getFactionForRole(p.role);
-            const playerIsWolfSide = faction === FACTIONS.WOLF;
+            // Determine win: wolf-side if any role is wolf
+            const playerIsWolfSide = roles.some(
+                (r) => getFactionForRole(r) === FACTIONS.WOLF
+            );
             const won = playerIsWolfSide === isWolfWin;
 
-            if (won) {
-                stat.wins += 1;
-            }
+            roles.forEach((role) => {
+                if (!map[role]) {
+                    map[role] = { roleKey: role, timesPlayed: 0, wins: 0, survived: 0 };
+                }
+                const stat = map[role];
+                stat.timesPlayed += 1;
 
-            if (p.alive) {
-                stat.survived += 1;
-            }
+                if (won) {
+                    stat.wins += 1;
+                }
+
+                if (p.alive) {
+                    stat.survived += 1;
+                }
+            });
         });
     });
 

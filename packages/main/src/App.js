@@ -4,11 +4,18 @@ import { Routes } from "./routes";
 
 const TOOL_ITEMS = [
     {
-        path: "/game-analysis",
-        title: "Game Analysis",
-        description: "Record werewolf games, track player stats, and analyse role win rates.",
-        tag: "Board game analytics",
+        path: "/game-analysis/entry",
+        title: "狼人杀 · 记录",
+        description: "记录每局游戏结果，管理玩家名单与历史数据。",
+        tag: "游戏记录",
         accent: "#7c3aed",
+    },
+    {
+        path: "/game-analysis/analytics",
+        title: "狼人杀 · 分析",
+        description: "查看整体胜率、角色表现与玩家统计数据。",
+        tag: "数据分析",
+        accent: "#5b21b6",
     },
     {
         path: "/who-goes-first",
