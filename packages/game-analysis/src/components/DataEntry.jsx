@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { message } from "antd";
-import { PlusOutlined, DeleteOutlined, DownloadOutlined, UploadOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { DEFAULT_ROLES, FACTIONS, WINNING_FACTIONS, WINNING_FACTION_COLORS, GAME_MODES, GAME_MODE_LABELS, FACTION_LABELS, DEFAULT_ROLE_KEYS, getRoleByKey, getAllRoles, generateRoleKey } from "../constants/roles";
-import { loadData, syncFromSheets, addGame, deleteGame, addPlayer, removePlayer, addRole, removeRole, exportData, importData } from "../data/storage";
+import { loadData, syncFromSheets, addGame, updateGame, deleteGame, addPlayer, removePlayer, addRole, removeRole, exportData, importData } from "../data/storage";
 import { getOverallWinRate } from "../data/analytics";
 
 // ============================================================================
@@ -486,6 +486,37 @@ export const DataEntry = () => {
   const [newPlayerName, setNewPlayerName] = useState("");
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleFaction, setNewRoleFaction] = useState(FACTIONS.VILLAGER);
+
+  // Edit game state
+  const [editingGameId, setEditingGameId] = useState(null);
+  const [editWinner, setEditWinner] = useState("");
+  const [editMode, setEditMode] = useState(GAME_MODES.STANDARD);
+  const [editPlayers, setEditPlayers] = useState([]);
+  const [editMvps, setEditMvps] = useState([]);
+
+  const startEditGame = (game) => {
+    setEditingGameId(game.id);
+    setEditWinner(game.winner);
+    setEditMode(game.mode || GAME_MODES.STANDARD);
+    setEditPlayers(game.players.map((p) => ({ ...p })));
+    setEditMvps(game.mvps || []);
+  };
+
+  const cancelEditGame = () => {
+    setEditingGameId(null);
+  };
+
+  const saveEditGame = () => {
+    const newData = updateGame(editingGameId, {
+      winner: editWinner,
+      mode: editMode,
+      players: editPlayers,
+      mvps: editMvps,
+    });
+    setData(newData);
+    setEditingGameId(null);
+    message.success("游戏记录已更新");
+  };
   const fileInputRef = useRef(null);
 
   // Sync status: "idle" | "syncing" | "synced" | "error"
@@ -864,89 +895,187 @@ export const DataEntry = () => {
                         game.mode === GAME_MODES.DOUBLE_IDENTITY ? "双身份" : "";
                       return (
                         <GameHistoryCard key={game.id}>
-                          <GameMeta>
-                            <GameDate>{game.date}</GameDate>
-                            <GameWinner winner={game.winner}>
-                              {winnerLabel}
-                            </GameWinner>
-                            {modeLabel && (
-                              <span style={{
-                                color: "#1a73e8",
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                background: "#e8f0fe",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                              }}>
-                                {modeLabel}
-                              </span>
-                            )}
-                            <span style={{ color: "#5f6368", fontSize: "0.85rem" }}>
-                              {game.players.length} 人
-                            </span>
-                            {game.mvps && game.mvps.length > 0 && (
-                              <span style={{
-                                color: "#b45309",
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                background: "#fef3c7",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                              }}>
-                                🏅 MVP: {game.mvps.join(", ")}
-                              </span>
-                            )}
-                          </GameMeta>
-                          <GamePlayers>
-                            {game.players.map((p, idx) => {
-                              const role = getRoleByKey(p.role, customRoles);
-                              const roleColor = role
-                                ? (() => {
-                                    if (role.faction === FACTIONS.WOLF)
-                                      return "#c5221f";
-                                    if (role.faction === FACTIONS.VILLAGER)
-                                      return "#137333";
-                                    return "#1a73e8";
-                                  })()
-                                : "#5f6368";
-                              const role2 = p.role2 ? getRoleByKey(p.role2, customRoles) : null;
-                              const role2Color = role2
-                                ? (() => {
-                                    if (role2.faction === FACTIONS.WOLF) return "#c5221f";
-                                    if (role2.faction === FACTIONS.VILLAGER) return "#137333";
-                                    return "#1a73e8";
-                                  })()
-                                : null;
-                              return (
-                                <PlayerChip key={idx}>
-                                  <PlayerChipName>{p.name}</PlayerChipName>
-                                  <PlayerChipRole color={roleColor}>
-                                    {role?.name}
-                                  </PlayerChipRole>
-                                  {role2 && (
-                                    <PlayerChipRole color={role2Color}>
-                                      {role2.name}
-                                    </PlayerChipRole>
-                                  )}
-                                </PlayerChip>
-                              );
-                            })}
-                          </GamePlayers>
-                          <GameActionsContainer>
-                            <GameDeleteButton
-                              onClick={() => {
-                                if (
-                                  window.confirm(
-                                    "确认删除此局游戏记录？"
-                                  )
-                                ) {
-                                  handleDeleteGame(game.id);
-                                }
-                              }}
-                            >
-                              <DeleteOutlined />
-                            </GameDeleteButton>
-                          </GameActionsContainer>
+                          {editingGameId === game.id ? (
+                            /* ---- EDIT MODE ---- */
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+                              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                                <GameDate>{game.date}</GameDate>
+                                <Select value={editWinner} onChange={(e) => setEditWinner(e.target.value)} style={{ fontSize: "0.85rem", padding: "4px 8px", borderRadius: "8px" }}>
+                                  <option value={WINNING_FACTIONS.WOLF}>🐺 狼人胜</option>
+                                  <option value={WINNING_FACTIONS.VILLAGE}>🏘️ 好人胜</option>
+                                </Select>
+                                <Select value={editMode} onChange={(e) => setEditMode(e.target.value)} style={{ fontSize: "0.85rem", padding: "4px 8px", borderRadius: "8px" }}>
+                                  <option value={GAME_MODES.STANDARD}>标准</option>
+                                  <option value={GAME_MODES.DOUBLE_IDENTITY}>双身份</option>
+                                </Select>
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                {editPlayers.map((p, idx) => (
+                                  <div key={idx} style={{ display: "flex", gap: "6px", alignItems: "center", background: "#f8f9fa", borderRadius: "8px", padding: "6px 10px" }}>
+                                    <span style={{ fontWeight: 500, minWidth: "60px", fontSize: "0.85rem" }}>{p.name}</span>
+                                    <Select
+                                      value={p.role}
+                                      onChange={(e) => {
+                                        const copy = [...editPlayers];
+                                        copy[idx] = { ...copy[idx], role: e.target.value };
+                                        setEditPlayers(copy);
+                                      }}
+                                      style={{ fontSize: "0.8rem", padding: "2px 6px", borderRadius: "6px", flex: 1 }}
+                                    >
+                                      {allRoles.map((r) => (
+                                        <option key={r.key} value={r.key}>{r.name}</option>
+                                      ))}
+                                    </Select>
+                                    {editMode === GAME_MODES.DOUBLE_IDENTITY && (
+                                      <Select
+                                        value={p.role2 || "villager"}
+                                        onChange={(e) => {
+                                          const copy = [...editPlayers];
+                                          copy[idx] = { ...copy[idx], role2: e.target.value };
+                                          setEditPlayers(copy);
+                                        }}
+                                        style={{ fontSize: "0.8rem", padding: "2px 6px", borderRadius: "6px", flex: 1 }}
+                                      >
+                                        {allRoles.map((r) => (
+                                          <option key={r.key} value={r.key}>{r.name}</option>
+                                        ))}
+                                      </Select>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              <div>
+                                <Label style={{ fontSize: "0.8rem", marginBottom: "4px" }}>🏅 MVP</Label>
+                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                  {editPlayers.map((p) => {
+                                    const isMvp = editMvps.includes(p.name);
+                                    return (
+                                      <Chip
+                                        key={p.name}
+                                        style={{
+                                          background: isMvp ? "#fef3c7" : "#f1f3f4",
+                                          color: isMvp ? "#b45309" : "#5f6368",
+                                          cursor: "pointer",
+                                          fontWeight: isMvp ? 600 : 400,
+                                          fontSize: "0.8rem",
+                                        }}
+                                        onClick={() => {
+                                          if (isMvp) {
+                                            setEditMvps(editMvps.filter((n) => n !== p.name));
+                                          } else {
+                                            setEditMvps([...editMvps, p.name]);
+                                          }
+                                        }}
+                                      >
+                                        {isMvp && "⭐ "}{p.name}
+                                      </Chip>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <Button onClick={saveEditGame} style={{ background: "#1a73e8", color: "#fff" }}>
+                                  <CheckOutlined /> 保存
+                                </Button>
+                                <Button onClick={cancelEditGame} style={{ background: "#f1f3f4", color: "#5f6368" }}>
+                                  <CloseOutlined /> 取消
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* ---- VIEW MODE ---- */
+                            <>
+                              <GameMeta>
+                                <GameDate>{game.date}</GameDate>
+                                <GameWinner winner={game.winner}>
+                                  {winnerLabel}
+                                </GameWinner>
+                                {modeLabel && (
+                                  <span style={{
+                                    color: "#1a73e8",
+                                    fontSize: "0.75rem",
+                                    fontWeight: 500,
+                                    background: "#e8f0fe",
+                                    padding: "2px 8px",
+                                    borderRadius: "12px",
+                                  }}>
+                                    {modeLabel}
+                                  </span>
+                                )}
+                                <span style={{ color: "#5f6368", fontSize: "0.85rem" }}>
+                                  {game.players.length} 人
+                                </span>
+                                {game.mvps && game.mvps.length > 0 && (
+                                  <span style={{
+                                    color: "#b45309",
+                                    fontSize: "0.75rem",
+                                    fontWeight: 500,
+                                    background: "#fef3c7",
+                                    padding: "2px 8px",
+                                    borderRadius: "12px",
+                                  }}>
+                                    🏅 MVP: {game.mvps.join(", ")}
+                                  </span>
+                                )}
+                              </GameMeta>
+                              <GamePlayers>
+                                {game.players.map((p, idx) => {
+                                  const role = getRoleByKey(p.role, customRoles);
+                                  const roleColor = role
+                                    ? (() => {
+                                        if (role.faction === FACTIONS.WOLF)
+                                          return "#c5221f";
+                                        if (role.faction === FACTIONS.VILLAGER)
+                                          return "#137333";
+                                        return "#1a73e8";
+                                      })()
+                                    : "#5f6368";
+                                  const role2 = p.role2 ? getRoleByKey(p.role2, customRoles) : null;
+                                  const role2Color = role2
+                                    ? (() => {
+                                        if (role2.faction === FACTIONS.WOLF) return "#c5221f";
+                                        if (role2.faction === FACTIONS.VILLAGER) return "#137333";
+                                        return "#1a73e8";
+                                      })()
+                                    : null;
+                                  return (
+                                    <PlayerChip key={idx}>
+                                      <PlayerChipName>{p.name}</PlayerChipName>
+                                      <PlayerChipRole color={roleColor}>
+                                        {role?.name}
+                                      </PlayerChipRole>
+                                      {role2 && (
+                                        <PlayerChipRole color={role2Color}>
+                                          {role2.name}
+                                        </PlayerChipRole>
+                                      )}
+                                    </PlayerChip>
+                                  );
+                                })}
+                              </GamePlayers>
+                              <GameActionsContainer>
+                                <GameDeleteButton
+                                  onClick={() => startEditGame(game)}
+                                  style={{ color: "#1a73e8" }}
+                                >
+                                  <EditOutlined />
+                                </GameDeleteButton>
+                                <GameDeleteButton
+                                  onClick={() => {
+                                    if (
+                                      window.confirm(
+                                        "确认删除此局游戏记录？"
+                                      )
+                                    ) {
+                                      handleDeleteGame(game.id);
+                                    }
+                                  }}
+                                >
+                                  <DeleteOutlined />
+                                </GameDeleteButton>
+                              </GameActionsContainer>
+                            </>
+                          )}
                         </GameHistoryCard>
                       );
                     })}

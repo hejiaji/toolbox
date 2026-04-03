@@ -87,10 +87,20 @@ export const syncFromSheets = async () => {
                 ...(local.players || []),
             ])];
 
-            // Merge games (union by id, local wins on conflict)
-            const remoteGameIds = new Set((remote.games || []).map((g) => g.id));
-            const localOnlyGames = (local.games || []).filter((g) => !remoteGameIds.has(g.id));
-            const allGames = [...(remote.games || []), ...localOnlyGames];
+            // Merge games (union by id, merge fields for duplicates)
+            const localGameMap = new Map((local.games || []).map((g) => [g.id, g]));
+            const mergedGameIds = new Set();
+            const mergedGames = (remote.games || []).map((rg) => {
+                mergedGameIds.add(rg.id);
+                const lg = localGameMap.get(rg.id);
+                if (lg) {
+                    // Merge: local fields fill in anything remote is missing
+                    return { ...lg, ...rg, mvps: rg.mvps && rg.mvps.length > 0 ? rg.mvps : (lg.mvps || []), mode: rg.mode || lg.mode };
+                }
+                return rg;
+            });
+            const localOnlyGames = (local.games || []).filter((g) => !mergedGameIds.has(g.id));
+            const allGames = [...mergedGames, ...localOnlyGames];
 
             // Merge custom roles (union by key, local wins on conflict)
             const remoteRoleKeys = new Set((remote.customRoles || []).map((r) => r.key));
@@ -194,6 +204,21 @@ export const addGame = (game) => {
         }
     });
 
+    return data;
+};
+
+/** Update a game record by id */
+export const updateGame = (gameId, updates) => {
+    const data = loadData();
+    const idx = data.games.findIndex((g) => g.id === gameId);
+    if (idx === -1) return data;
+    data.games[idx] = { ...data.games[idx], ...updates };
+    saveData(data);
+    // Re-sync to sheets: delete old + add updated
+    backgroundSync(async () => {
+        await sheetDeleteGame(gameId);
+        await sheetAddGame(data.games[idx]);
+    });
     return data;
 };
 
