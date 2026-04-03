@@ -62,13 +62,6 @@ const INTERNAL_ITEMS = [
         tag: "Story builder",
         accent: "#2b8f7a",
     },
-    {
-        path: "/zhihao-kitchen",
-        title: "Zhihao Kitchen",
-        description: "Plan meals, track prep, and keep kitchen rhythms in sync.",
-        tag: "Kitchen ops",
-        accent: "#d69a2b",
-    },
 ];
 
 const ToolIndex = () => {
