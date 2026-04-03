@@ -23,7 +23,7 @@ export const getOverallWinRate = (games) => {
 
 /**
  * Per-player stats.
- * Returns an array of { name, gamesPlayed, wins, losses, winRate, survivalRate, roles: { [roleKey]: count } }
+ * Returns an array of { name, gamesPlayed, wins, losses, winRate, roles: { [roleKey]: count } }
  */
 export const getPlayerStats = (games) => {
     const map = {};
@@ -38,7 +38,7 @@ export const getPlayerStats = (games) => {
                     gamesPlayed: 0,
                     wins: 0,
                     losses: 0,
-                    survived: 0,
+                    mvpCount: 0,
                     roles: {},
                 };
             }
@@ -58,8 +58,9 @@ export const getPlayerStats = (games) => {
                 stat.losses += 1;
             }
 
-            if (p.alive) {
-                stat.survived += 1;
+            // Track MVP
+            if (game.mvps && game.mvps.includes(p.name)) {
+                stat.mvpCount += 1;
             }
 
             // Track both roles
@@ -74,14 +75,13 @@ export const getPlayerStats = (games) => {
         .map((s) => ({
             ...s,
             winRate: s.gamesPlayed > 0 ? s.wins / s.gamesPlayed : 0,
-            survivalRate: s.gamesPlayed > 0 ? s.survived / s.gamesPlayed : 0,
         }))
         .sort((a, b) => b.gamesPlayed - a.gamesPlayed || b.winRate - a.winRate);
 };
 
 /**
  * Per-role stats.
- * Returns an array of { roleKey, timesPlayed, wins, winRate, survivalRate }
+ * Returns an array of { roleKey, timesPlayed, wins, winRate }
  */
 export const getRoleStats = (games) => {
     const map = {};
@@ -102,17 +102,13 @@ export const getRoleStats = (games) => {
 
             roles.forEach((role) => {
                 if (!map[role]) {
-                    map[role] = { roleKey: role, timesPlayed: 0, wins: 0, survived: 0 };
+                    map[role] = { roleKey: role, timesPlayed: 0, wins: 0 };
                 }
                 const stat = map[role];
                 stat.timesPlayed += 1;
 
                 if (won) {
                     stat.wins += 1;
-                }
-
-                if (p.alive) {
-                    stat.survived += 1;
                 }
             });
         });
@@ -122,7 +118,6 @@ export const getRoleStats = (games) => {
         .map((s) => ({
             ...s,
             winRate: s.timesPlayed > 0 ? s.wins / s.timesPlayed : 0,
-            survivalRate: s.timesPlayed > 0 ? s.survived / s.timesPlayed : 0,
         }))
         .sort((a, b) => b.timesPlayed - a.timesPlayed);
 };

@@ -539,7 +539,6 @@ export const Analytics = () => {
                           <th>出场次数</th>
                           <th>胜场</th>
                           <th>胜率</th>
-                          <th>存活率</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -566,9 +565,6 @@ export const Analytics = () => {
                                   {(role.winRate * 100).toFixed(1)}%
                                 </WinRateTag>
                               </td>
-                              <td>
-                                {(role.survivalRate * 100).toFixed(1)}%
-                              </td>
                             </tr>
                           );
                         })}
@@ -593,7 +589,7 @@ export const Analytics = () => {
                       <th>胜场</th>
                       <th>败场</th>
                       <th>胜率</th>
-                      <th>存活率</th>
+                      <th>MVP</th>
                       <th>出场角色</th>
                     </tr>
                   </thead>
@@ -612,7 +608,7 @@ export const Analytics = () => {
                           </WinRateTag>
                         </td>
                         <td>
-                          {(stat.survivalRate * 100).toFixed(1)}%
+                          {stat.mvpCount > 0 ? `🏅 ${stat.mvpCount}` : "-"}
                         </td>
                         <td>
                           <TagContainer>
@@ -692,13 +688,10 @@ export const Analytics = () => {
                             roleObj?.faction || FACTIONS.VILLAGER;
                           const roleColor = getFactionColor(faction);
                           const roleBgColor = getFactionBgColor(faction);
-                          const aliveStatus = player.alive ? '✓' : '✗';
 
                           const roleLabel = roleObj?.name || player.role;
                           const role2Label = role2Obj ? ` + ${role2Obj.name}` : '';
-                          const titleText = `${player.name} - ${roleLabel}${role2Label} - ${
-                            player.alive ? '存活' : '死亡'
-                          }`;
+                          const titleText = `${player.name} - ${roleLabel}${role2Label}`;
 
                           return (
                             <PlayerChip
@@ -707,13 +700,28 @@ export const Analytics = () => {
                               color={roleColor}
                               title={titleText}
                             >
-                              {aliveStatus} {player.name}
+                              {player.name}
                             </PlayerChip>
                           );
                         })}
                       </HistoryPlayers>
                     </HistoryContent>
-                    <PlayerCount>{game.players.length} 人</PlayerCount>
+                    <PlayerCount>
+                      {game.players.length} 人
+                      {game.mvps && game.mvps.length > 0 && (
+                        <span style={{
+                          color: "#b45309",
+                          fontSize: "0.75rem",
+                          fontWeight: 500,
+                          background: "#fef3c7",
+                          padding: "2px 8px",
+                          borderRadius: "12px",
+                          marginLeft: "6px",
+                        }}>
+                          🏅 {game.mvps.join(", ")}
+                        </span>
+                      )}
+                    </PlayerCount>
                   </HistoryCard>
                 );
               })}

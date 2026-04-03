@@ -482,6 +482,7 @@ export const DataEntry = () => {
   const [gameMode, setGameMode] = useState(GAME_MODES.STANDARD);
   const [gameWinner, setGameWinner] = useState(WINNING_FACTIONS.WOLF);
   const [gamePlayers, setGamePlayers] = useState([]);
+  const [gameMvps, setGameMvps] = useState([]);
   const [newPlayerName, setNewPlayerName] = useState("");
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleFaction, setNewRoleFaction] = useState(FACTIONS.VILLAGER);
@@ -533,7 +534,7 @@ export const DataEntry = () => {
       return;
     }
     const playerName = availablePlayers[0];
-    const newPlayer = { name: playerName, role: "villager", alive: true };
+    const newPlayer = { name: playerName, role: "villager" };
     if (gameMode === GAME_MODES.DOUBLE_IDENTITY) {
       newPlayer.role2 = "villager";
     }
@@ -547,7 +548,11 @@ export const DataEntry = () => {
   };
 
   const removeGamePlayer = (index) => {
+    const removed = gamePlayers[index];
     setGamePlayers(gamePlayers.filter((_, i) => i !== index));
+    if (removed) {
+      setGameMvps((prev) => prev.filter((name) => name !== removed.name));
+    }
   };
 
   const handleSubmitGame = () => {
@@ -561,6 +566,7 @@ export const DataEntry = () => {
       mode: gameMode,
       winner: gameWinner,
       players: gamePlayers,
+      mvps: gameMvps,
     };
 
     const newData = addGame(gameRecord);
@@ -569,6 +575,7 @@ export const DataEntry = () => {
     setGameMode(GAME_MODES.STANDARD);
     setGameWinner(WINNING_FACTIONS.WOLF);
     setGamePlayers([]);
+    setGameMvps([]);
     message.success("Game recorded successfully");
   };
 
@@ -734,17 +741,6 @@ export const DataEntry = () => {
                         ))}
                       </Select>
                     )}
-                    <SwitchContainer>
-                      <SwitchCheckbox
-                        type="checkbox"
-                        id={`alive-${idx}`}
-                        checked={player.alive}
-                        onChange={(e) =>
-                          updateGamePlayer(idx, "alive", e.target.checked)
-                        }
-                      />
-                      <SwitchLabel htmlFor={`alive-${idx}`}>存活</SwitchLabel>
-                    </SwitchContainer>
                     <DeleteButton onClick={() => removeGamePlayer(idx)}>
                       <DeleteOutlined />
                     </DeleteButton>
@@ -758,7 +754,6 @@ export const DataEntry = () => {
                   const newPlayer = {
                     name: e.target.value,
                     role: "villager",
-                    alive: true,
                   };
                   if (gameMode === GAME_MODES.DOUBLE_IDENTITY) {
                     newPlayer.role2 = "villager";
@@ -776,6 +771,41 @@ export const DataEntry = () => {
                 </Select>
               </FormGroup>
             </SectionCard>
+
+            {gamePlayers.length > 0 && (
+              <SectionCard>
+                <SectionTitle>🏅 MVP</SectionTitle>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {gamePlayers.map((p) => {
+                    const isMvp = gameMvps.includes(p.name);
+                    return (
+                      <Chip
+                        key={p.name}
+                        style={{
+                          background: isMvp ? "#e8f0fe" : "#f1f3f4",
+                          color: isMvp ? "#1a73e8" : "#5f6368",
+                          cursor: "pointer",
+                          fontWeight: isMvp ? 600 : 400,
+                          border: isMvp ? "1.5px solid #1a73e8" : "1.5px solid transparent",
+                        }}
+                        onClick={() => {
+                          if (isMvp) {
+                            setGameMvps(gameMvps.filter((n) => n !== p.name));
+                          } else {
+                            setGameMvps([...gameMvps, p.name]);
+                          }
+                        }}
+                      >
+                        {isMvp && "⭐ "}{p.name}
+                      </Chip>
+                    );
+                  })}
+                </div>
+                <span style={{ fontSize: "0.8rem", color: "#5f6368", marginTop: "8px", display: "block" }}>
+                  点击选择本局 MVP（可多选）
+                </span>
+              </SectionCard>
+            )}
 
             <ButtonGroup>
               <Button onClick={handleSubmitGame}>
@@ -854,6 +884,18 @@ export const DataEntry = () => {
                             <span style={{ color: "#5f6368", fontSize: "0.85rem" }}>
                               {game.players.length} 人
                             </span>
+                            {game.mvps && game.mvps.length > 0 && (
+                              <span style={{
+                                color: "#b45309",
+                                fontSize: "0.75rem",
+                                fontWeight: 500,
+                                background: "#fef3c7",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                              }}>
+                                🏅 MVP: {game.mvps.join(", ")}
+                              </span>
+                            )}
                           </GameMeta>
                           <GamePlayers>
                             {game.players.map((p, idx) => {
