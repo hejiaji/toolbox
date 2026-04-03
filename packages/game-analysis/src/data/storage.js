@@ -67,8 +67,9 @@ export const saveData = (data) => {
 /* ------------------------------------------------------------------ */
 
 /**
- * Fetch fresh data from Google Sheets and update localStorage cache.
- * Returns the fresh data, or falls back to localStorage if Sheets is not configured.
+ * Fetch fresh data from Google Sheets and merge with localStorage cache.
+ * Merging ensures any local writes that haven't synced yet are preserved.
+ * Returns the merged data, or falls back to localStorage if Sheets is not configured.
  */
 export const syncFromSheets = async () => {
     if (!isGoogleSheetsEnabled()) {
@@ -78,8 +79,31 @@ export const syncFromSheets = async () => {
     try {
         const remote = await fetchAllData();
         if (remote) {
-            saveData(remote);
-            return remote;
+            const local = loadData();
+
+            // Merge players (union)
+            const allPlayers = [...new Set([
+                ...(remote.players || []),
+                ...(local.players || []),
+            ])];
+
+            // Merge games (union by id, local wins on conflict)
+            const remoteGameIds = new Set((remote.games || []).map((g) => g.id));
+            const localOnlyGames = (local.games || []).filter((g) => !remoteGameIds.has(g.id));
+            const allGames = [...(remote.games || []), ...localOnlyGames];
+
+            // Merge custom roles (union by key, local wins on conflict)
+            const remoteRoleKeys = new Set((remote.customRoles || []).map((r) => r.key));
+            const localOnlyRoles = (local.customRoles || []).filter((r) => !remoteRoleKeys.has(r.key));
+            const allRoles = [...(remote.customRoles || []), ...localOnlyRoles];
+
+            const merged = {
+                players: allPlayers,
+                games: allGames,
+                customRoles: allRoles,
+            };
+            saveData(merged);
+            return merged;
         }
     } catch (err) {
         console.warn("Failed to sync from Google Sheets, using local cache:", err);
