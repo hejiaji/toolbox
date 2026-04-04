@@ -1,4 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+    fetchNote as sheetsFetchNote,
+    pushNote as sheetsPushNote,
+    deleteNote as sheetsDeleteNote,
+} from "../data/sheetsApi";
+import { isGoogleSheetsEnabled } from "../data/sheetsConfig";
 import styled from "styled-components";
 import {
     Button,
@@ -135,13 +141,6 @@ const PreviewRow = styled.div`
     flex-direction: column;
     gap: 0.85rem;
 `;
-
-import {
-    fetchNote as sheetsFetchNote,
-    pushNote as sheetsPushNote,
-    deleteNote as sheetsDeleteNote,
-} from "../data/sheetsApi";
-import { isGoogleSheetsEnabled } from "../data/sheetsConfig";
 
 const STORAGE_KEY = "toolbox.syncInput";
 const NOTE_ID = "default";
