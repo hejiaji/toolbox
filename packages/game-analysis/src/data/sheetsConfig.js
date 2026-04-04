@@ -25,13 +25,13 @@
 
 // The spreadsheet ID from the Google Sheet URL:
 // https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit
-export const SPREADSHEET_ID = "1NK6foS8YATx0iap90p8-faQOed2OmzPOuFQzB3C1smQ";
+export const SPREADSHEET_ID = process.env.REACT_APP_GAME_ANALYSIS_SPREADSHEET_ID || "";
 
 // Your Google API key (for reading public sheets)
-export const API_KEY = "AIzaSyCnpK1aiJn1Ll-0v5KWyHZVkwTVmSyn03s";
+export const API_KEY = process.env.REACT_APP_GOOGLE_API_KEY || "";
 
 // The deployed Google Apps Script web app URL (for writes)
-export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzcqAzfmVw6AAo1jmpzqopJNf0BM6P1QqJLoSlVOvRr7To8QwV8AbTFju67u20ePPdx/exec";
+export const APPS_SCRIPT_URL = process.env.REACT_APP_GAME_ANALYSIS_APPS_SCRIPT_URL || "";
 
 // Sheet tab names
 export const PLAYERS_SHEET = "Players";

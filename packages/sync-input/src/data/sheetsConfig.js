@@ -23,13 +23,13 @@
 
 // The spreadsheet ID from the Google Sheet URL:
 // https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit
-export const SPREADSHEET_ID = "1YEdDKDYB-H15TrV4GAyjrLXiQ0X4ykWel12nCMW5vmQ";
+export const SPREADSHEET_ID = process.env.REACT_APP_SYNC_INPUT_SPREADSHEET_ID || "";
 
 // Your Google API key (for reading public sheets)
-export const API_KEY = "AIzaSyCnpK1aiJn1Ll-0v5KWyHZVkwTVmSyn03s";
+export const API_KEY = process.env.REACT_APP_GOOGLE_API_KEY || "";
 
 // The deployed Google Apps Script web app URL (for writes)
-export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPISHEt8X3C82xum_z4v2_LkyiVHc28JnCKnGX1EigJsa-zQJZo6oWZm1s8i4G358aSg/exec";
+export const APPS_SCRIPT_URL = process.env.REACT_APP_SYNC_INPUT_APPS_SCRIPT_URL || "";
 
 // Sheet tab name
 export const NOTES_SHEET = "Notes";
