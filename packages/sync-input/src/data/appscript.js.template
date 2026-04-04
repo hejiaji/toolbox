@@ -33,9 +33,35 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: "ok", message: "Sync Input API" }))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    var action = (e.parameter && e.parameter.action) || "";
+    if (action === "getNote") {
+      return jsonOk(handleGetNote(e.parameter.id));
+    }
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "ok", message: "Sync Input API" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return jsonError(err.toString());
+  }
+}
+
+function handleGetNote(noteId) {
+  if (!noteId) return { noteValue: "", updatedAt: null };
+
+  var sheet = getSheet(NOTES_SHEET);
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === noteId) {
+      return {
+        noteValue: data[i][1] || "",
+        updatedAt: data[i][2] || null,
+      };
+    }
+  }
+
+  return { noteValue: "", updatedAt: null };
 }
 
 /* ------------------------------------------------------------------ */

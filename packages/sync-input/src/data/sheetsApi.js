@@ -5,21 +5,18 @@
  */
 
 import {
-    SPREADSHEET_ID,
-    API_KEY,
     APPS_SCRIPT_URL,
-    NOTES_SHEET,
     isGoogleSheetsEnabled,
 } from "./sheetsConfig";
-
-const SHEETS_API_BASE = "https://sheets.googleapis.com/v4/spreadsheets";
 
 /* ------------------------------------------------------------------ */
 /*  Reading (Sheets API v4)                                            */
 /* ------------------------------------------------------------------ */
 
 /**
- * Fetch a note by ID from the Notes sheet.
+ * Fetch a note by ID.
+ * Uses Apps Script (not the Sheets API) to avoid Google's public-read cache,
+ * which can be stale for several minutes — unacceptable for real-time sync.
  * Returns { noteValue, updatedAt } or { noteValue: "", updatedAt: null } if not found.
  */
 export const fetchNote = async (noteId) => {
@@ -27,26 +24,17 @@ export const fetchNote = async (noteId) => {
         throw new Error("Google Sheets is not configured.");
     }
 
-    const url = `${SHEETS_API_BASE}/${SPREADSHEET_ID}/values/${encodeURIComponent(NOTES_SHEET)}?key=${API_KEY}`;
+    const url = `${APPS_SCRIPT_URL}?action=getNote&id=${encodeURIComponent(noteId)}`;
     const res = await fetch(url);
     if (!res.ok) {
-        throw new Error(`Sheets API error (${res.status}): ${await res.text()}`);
+        throw new Error(`Apps Script error (${res.status}): ${await res.text()}`);
     }
 
     const json = await res.json();
-    const rows = json.values || [];
-
-    // Skip header, find row matching noteId
-    for (let i = 1; i < rows.length; i++) {
-        if (rows[i][0] === noteId) {
-            return {
-                noteValue: rows[i][1] || "",
-                updatedAt: rows[i][2] || null,
-            };
-        }
-    }
-
-    return { noteValue: "", updatedAt: null };
+    return {
+        noteValue: json.noteValue ?? json.content ?? "",
+        updatedAt: json.updatedAt || null,
+    };
 };
 
 /* ------------------------------------------------------------------ */
