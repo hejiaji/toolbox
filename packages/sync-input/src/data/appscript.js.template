@@ -1,0 +1,104 @@
+/**
+ * Google Apps Script — deploy as a web app to handle writes for Sync Input.
+ *
+ * Setup:
+ * 1. Open your Google Sheet → Extensions → Apps Script
+ * 2. Replace the default Code.gs with this entire file
+ * 3. Deploy → New Deployment → Web App
+ *    - Execute as: "Me"
+ *    - Who has access: "Anyone"
+ * 4. Copy the deployment URL into sheetsConfig.js → APPS_SCRIPT_URL
+ *
+ * Supported actions: saveNote, deleteNote
+ */
+
+var NOTES_SHEET = "Notes";
+
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+    var action = body.action;
+
+    switch (action) {
+      case "saveNote":
+        return jsonOk(handleSaveNote(body.id, body.content));
+      case "deleteNote":
+        return jsonOk(handleDeleteNote(body.id));
+      default:
+        return jsonError("Unknown action: " + action);
+    }
+  } catch (err) {
+    return jsonError(err.toString());
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "ok", message: "Sync Input API" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Action handlers                                                    */
+/* ------------------------------------------------------------------ */
+
+function handleSaveNote(noteId, content) {
+  if (!noteId) return { error: "Missing note id" };
+
+  var sheet = getSheet(NOTES_SHEET);
+  var data = sheet.getDataRange().getValues();
+  var updatedAt = new Date().toISOString();
+
+  // Look for existing row with this ID
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === noteId) {
+      // Update in place
+      sheet.getRange(i + 1, 2).setValue(content);
+      sheet.getRange(i + 1, 3).setValue(updatedAt);
+      return { noteValue: content, updatedAt: updatedAt };
+    }
+  }
+
+  // Not found — append new row
+  sheet.appendRow([noteId, content, updatedAt]);
+  return { noteValue: content, updatedAt: updatedAt };
+}
+
+function handleDeleteNote(noteId) {
+  var sheet = getSheet(NOTES_SHEET);
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === noteId) {
+      sheet.deleteRow(i + 1);
+      return { result: "deleted", id: noteId };
+    }
+  }
+  return { result: "not_found" };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function getSheet(name) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["id", "content", "updatedAt"]);
+  }
+  return sheet;
+}
+
+function jsonOk(result) {
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonError(message) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ error: message }))
+    .setMimeType(ContentService.MimeType.JSON);
+}

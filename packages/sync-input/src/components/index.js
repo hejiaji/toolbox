@@ -136,14 +136,16 @@ const PreviewRow = styled.div`
     gap: 0.85rem;
 `;
 
+import {
+    fetchNote as sheetsFetchNote,
+    pushNote as sheetsPushNote,
+    deleteNote as sheetsDeleteNote,
+} from "../data/sheetsApi";
+import { isGoogleSheetsEnabled } from "../data/sheetsConfig";
+
 const STORAGE_KEY = "toolbox.syncInput";
 const NOTE_ID = "default";
-const POLL_INTERVAL_MS = 3000;
-
-const API_BASE_URL =
-    process.env.IS_LOCAL === "true"
-        ? "http://localhost:4001"
-        : "https://toolbox-sync.onrender.com";
+const POLL_INTERVAL_MS = 4000;
 
 const loadStoredState = () => {
     if (typeof window === "undefined") {
@@ -169,23 +171,17 @@ const saveStoredState = (state) => {
 };
 
 const fetchNote = async () => {
-    const response = await fetch(`${API_BASE_URL}/api/note/${NOTE_ID}`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch note");
+    if (!isGoogleSheetsEnabled()) {
+        throw new Error("Google Sheets not configured");
     }
-    return response.json();
+    return sheetsFetchNote(NOTE_ID);
 };
 
 const pushNote = async (noteValue) => {
-    const response = await fetch(`${API_BASE_URL}/api/note/${NOTE_ID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ noteValue }),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to save note");
+    if (!isGoogleSheetsEnabled()) {
+        throw new Error("Google Sheets not configured");
     }
-    return response.json();
+    return sheetsPushNote(NOTE_ID, noteValue);
 };
 
 const formatNotePreview = (noteValue) => {
@@ -313,7 +309,15 @@ const SyncInput = () => {
 
     const handleClear = async () => {
         setNoteValue("");
-        await pushToServer("");
+        saveStoredState({ noteValue: "", lastSavedAt: null });
+        if (isGoogleSheetsEnabled()) {
+            try {
+                await sheetsDeleteNote(NOTE_ID);
+            } catch {
+                // ignore
+            }
+        }
+        setLastSavedAt(null);
     };
 
     const statusConfig = {
@@ -354,7 +358,9 @@ const SyncInput = () => {
                         <SyncRowFooter>
                             <Text type="secondary">
                                 {syncStatus === "offline"
-                                    ? "Server unreachable - changes saved locally"
+                                    ? (isGoogleSheetsEnabled()
+                                        ? "Sheets unreachable - changes saved locally"
+                                        : "Google Sheets not configured - local only")
                                     : "Auto-sync is on"}
                             </Text>
                             <Button
