@@ -64,7 +64,7 @@ module.exports = function (proxy, allowedHost) {
         ignored: ignoredFiles(paths.appSrc),
       },
     },
-    https: getHttpsConfig(),
+    server: getHttpsConfig() ? { type: 'https', options: getHttpsConfig() } : undefined,
     host,
     historyApiFallback: {
       // Paths with dots should still use the history fallback.

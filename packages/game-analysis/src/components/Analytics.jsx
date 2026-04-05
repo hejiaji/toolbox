@@ -649,6 +649,7 @@ export const Analytics = () => {
                       <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("losses")}>败场{sortArrow("losses")}</th>
                       <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("winRate")}>胜率{sortArrow("winRate")}</th>
                       <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("mvpCount")}>MVP{sortArrow("mvpCount")}</th>
+                      <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("scapegoatCount")}>背锅侠{sortArrow("scapegoatCount")}</th>
                       <th>出场角色</th>
                     </tr>
                   </thead>
@@ -680,6 +681,9 @@ export const Analytics = () => {
                           {stat.mvpCount > 0 ? `🏅 ${stat.mvpCount}` : "-"}
                         </td>
                         <td>
+                          {stat.scapegoatCount > 0 ? `💀 ${stat.scapegoatCount}` : "-"}
+                        </td>
+                        <td>
                           <TagContainer>
                             {Object.entries(stat.roles)
                               .sort((a, b) => b[1] - a[1])
@@ -708,7 +712,7 @@ export const Analytics = () => {
                       </tr>,
                       isExpanded && detail && (
                         <tr key={`${stat.name}_detail`}>
-                          <td colSpan={7} style={{ padding: 0, border: "none" }}>
+                          <td colSpan={8} style={{ padding: 0, border: "none" }}>
                             <div style={{
                               background: "#f8f9fa",
                               borderRadius: "12px",
@@ -885,6 +889,11 @@ export const Analytics = () => {
                         {game.mvps && game.mvps.length > 0 && (
                           <Chip bgColor="#fef3c7" color="#b45309">
                             🏅 {game.mvps.join(", ")}
+                          </Chip>
+                        )}
+                        {game.scapegoats && game.scapegoats.length > 0 && (
+                          <Chip bgColor="#fce8e6" color="#c5221f">
+                            💀 {game.scapegoats.join(", ")}
                           </Chip>
                         )}
                         <span style={{ color: "#9aa0a6", fontSize: "0.75rem", marginLeft: "auto" }}>

@@ -489,6 +489,7 @@ export const DataEntry = () => {
   const [gameWinner, setGameWinner] = useState(WINNING_FACTIONS.WOLF);
   const [gamePlayers, setGamePlayers] = useState([]);
   const [gameMvps, setGameMvps] = useState([]);
+  const [gameScapegoats, setGameScapegoats] = useState([]);
   const [newPlayerName, setNewPlayerName] = useState("");
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleFaction, setNewRoleFaction] = useState(FACTIONS.VILLAGER);
@@ -499,6 +500,7 @@ export const DataEntry = () => {
   const [editMode, setEditMode] = useState(GAME_MODES.STANDARD);
   const [editPlayers, setEditPlayers] = useState([]);
   const [editMvps, setEditMvps] = useState([]);
+  const [editScapegoats, setEditScapegoats] = useState([]);
 
   const startEditGame = (game) => {
     setEditingGameId(game.id);
@@ -506,6 +508,7 @@ export const DataEntry = () => {
     setEditMode(game.mode || GAME_MODES.STANDARD);
     setEditPlayers(game.players.map((p) => ({ ...p })));
     setEditMvps(game.mvps || []);
+    setEditScapegoats(game.scapegoats || []);
   };
 
   const cancelEditGame = () => {
@@ -518,6 +521,7 @@ export const DataEntry = () => {
       mode: editMode,
       players: editPlayers,
       mvps: editMvps,
+      scapegoats: editScapegoats,
     });
     setData(newData);
     setEditingGameId(null);
@@ -589,6 +593,7 @@ export const DataEntry = () => {
     setGamePlayers(gamePlayers.filter((_, i) => i !== index));
     if (removed) {
       setGameMvps((prev) => prev.filter((name) => name !== removed.name));
+      setGameScapegoats((prev) => prev.filter((name) => name !== removed.name));
     }
   };
 
@@ -604,6 +609,7 @@ export const DataEntry = () => {
       winner: gameWinner,
       players: gamePlayers,
       mvps: gameMvps,
+      scapegoats: gameScapegoats,
     };
 
     const newData = addGame(gameRecord);
@@ -613,6 +619,7 @@ export const DataEntry = () => {
     setGameWinner(WINNING_FACTIONS.WOLF);
     setGamePlayers([]);
     setGameMvps([]);
+    setGameScapegoats([]);
     message.success("Game recorded successfully");
   };
 
@@ -857,6 +864,38 @@ export const DataEntry = () => {
                 <span style={{ fontSize: "0.8rem", color: "#5f6368", marginTop: "8px", display: "block" }}>
                   点击选择本局 MVP（可多选）
                 </span>
+                <div style={{ marginTop: "16px" }}>
+                  <SectionTitle>🫣 背锅侠</SectionTitle>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {gamePlayers.map((p) => {
+                      const isScapegoat = gameScapegoats.includes(p.name);
+                      return (
+                        <Chip
+                          key={p.name}
+                          style={{
+                            background: isScapegoat ? "#fce8e6" : "#f1f3f4",
+                            color: isScapegoat ? "#c5221f" : "#5f6368",
+                            cursor: "pointer",
+                            fontWeight: isScapegoat ? 600 : 400,
+                            border: isScapegoat ? "1.5px solid #c5221f" : "1.5px solid transparent",
+                          }}
+                          onClick={() => {
+                            if (isScapegoat) {
+                              setGameScapegoats(gameScapegoats.filter((n) => n !== p.name));
+                            } else {
+                              setGameScapegoats([...gameScapegoats, p.name]);
+                            }
+                          }}
+                        >
+                          {isScapegoat && "💀 "}{p.name}
+                        </Chip>
+                      );
+                    })}
+                  </div>
+                  <span style={{ fontSize: "0.8rem", color: "#5f6368", marginTop: "8px", display: "block" }}>
+                    点击选择本局背锅侠（可多选）
+                  </span>
+                </div>
               </SectionCard>
             )}
 
@@ -1018,6 +1057,35 @@ export const DataEntry = () => {
                                   })}
                                 </div>
                               </div>
+                              <div>
+                                <Label style={{ fontSize: "0.8rem", marginBottom: "4px" }}>🫣 背锅侠</Label>
+                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                  {editPlayers.map((p) => {
+                                    const isSg = editScapegoats.includes(p.name);
+                                    return (
+                                      <Chip
+                                        key={p.name}
+                                        style={{
+                                          background: isSg ? "#fce8e6" : "#f1f3f4",
+                                          color: isSg ? "#c5221f" : "#5f6368",
+                                          cursor: "pointer",
+                                          fontWeight: isSg ? 600 : 400,
+                                          fontSize: "0.8rem",
+                                        }}
+                                        onClick={() => {
+                                          if (isSg) {
+                                            setEditScapegoats(editScapegoats.filter((n) => n !== p.name));
+                                          } else {
+                                            setEditScapegoats([...editScapegoats, p.name]);
+                                          }
+                                        }}
+                                      >
+                                        {isSg && "💀 "}{p.name}
+                                      </Chip>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                               <div style={{ display: "flex", gap: "8px" }}>
                                 <Button onClick={saveEditGame} style={{ background: "#1a73e8", color: "#fff" }}>
                                   <CheckOutlined /> 保存
@@ -1060,6 +1128,18 @@ export const DataEntry = () => {
                                     borderRadius: "12px",
                                   }}>
                                     🏅 MVP: {game.mvps.join(", ")}
+                                  </span>
+                                )}
+                                {game.scapegoats && game.scapegoats.length > 0 && (
+                                  <span style={{
+                                    color: "#c5221f",
+                                    fontSize: "0.75rem",
+                                    fontWeight: 500,
+                                    background: "#fce8e6",
+                                    padding: "2px 8px",
+                                    borderRadius: "12px",
+                                  }}>
+                                    💀 背锅侠: {game.scapegoats.join(", ")}
                                   </span>
                                 )}
                               </GameMeta>

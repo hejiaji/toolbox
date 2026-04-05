@@ -39,6 +39,7 @@ export const getPlayerStats = (games) => {
                     wins: 0,
                     losses: 0,
                     mvpCount: 0,
+                    scapegoatCount: 0,
                     roles: {},
                 };
             }
@@ -63,9 +64,12 @@ export const getPlayerStats = (games) => {
                 stat.losses += 1;
             }
 
-            // Track MVP
+            // Track MVP and scapegoat
             if (game.mvps && game.mvps.includes(p.name)) {
                 stat.mvpCount += 1;
+            }
+            if (game.scapegoats && game.scapegoats.includes(p.name)) {
+                stat.scapegoatCount = (stat.scapegoatCount || 0) + 1;
             }
 
             // Track both roles
@@ -178,7 +182,7 @@ export const getPlayerDetailedStats = (games, playerName) => {
     let villageSideGames = 0, villageSideWins = 0;
     let standardGames = 0, standardWins = 0;
     let doubleIdGames = 0, doubleIdWins = 0;
-    let mvpCount = 0;
+    let mvpCount = 0, scapegoatCount = 0;
     let wins = 0, losses = 0;
     const results = []; // chronological W/L
 
@@ -234,9 +238,12 @@ export const getPlayerDetailedStats = (games, playerName) => {
             if (won) standardWins++;
         }
 
-        // MVP
+        // MVP and scapegoat
         if (game.mvps && game.mvps.includes(playerName)) {
             mvpCount++;
+        }
+        if (game.scapegoats && game.scapegoats.includes(playerName)) {
+            scapegoatCount++;
         }
 
         // Role tracking
@@ -286,6 +293,8 @@ export const getPlayerDetailedStats = (games, playerName) => {
         winRate: gamesPlayed > 0 ? wins / gamesPlayed : 0,
         mvpCount,
         mvpRate: gamesPlayed > 0 ? mvpCount / gamesPlayed : 0,
+        scapegoatCount,
+        scapegoatRate: gamesPlayed > 0 ? scapegoatCount / gamesPlayed : 0,
         roles: roleMap,
         roleWinRates,
         wolfSideGames,

@@ -87,7 +87,7 @@ function handleRemovePlayer(name) {
 
 function handleAddGame(body) {
   var sheet = getSheet(GAMES_SHEET);
-  sheet.appendRow([body.id, body.date, body.winner, body.players, body.mvps || "[]"]);
+  sheet.appendRow([body.id, body.date, body.winner, body.players, body.mvps || "[]", body.scapegoats || "[]"]);
   return { result: "added", id: body.id };
 }
 
@@ -159,7 +159,7 @@ function handleImportData(body) {
 
     body.games.forEach(function(game) {
       if (game.id && existingIds.indexOf(game.id) === -1) {
-        gSheet.appendRow([game.id, game.date, game.winner, game.players, game.mvps || "[]"]);
+        gSheet.appendRow([game.id, game.date, game.winner, game.players, game.mvps || "[]", game.scapegoats || "[]"]);
         existingIds.push(game.id);
         gamesAdded++;
       }
@@ -195,7 +195,7 @@ function getSheet(name) {
     if (name === PLAYERS_SHEET) {
       sheet.appendRow(["name"]);
     } else if (name === GAMES_SHEET) {
-      sheet.appendRow(["id", "date", "winner", "players", "mvps"]);
+      sheet.appendRow(["id", "date", "winner", "players", "mvps", "scapegoats"]);
     } else if (name === ROLES_SHEET) {
       sheet.appendRow(["key", "name", "faction"]);
     }

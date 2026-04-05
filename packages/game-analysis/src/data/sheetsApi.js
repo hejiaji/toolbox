@@ -52,10 +52,11 @@ export const fetchGames = async () => {
     const rows = await fetchSheetValues(GAMES_SHEET);
     if (rows.length <= 1) return []; // empty or header only
 
-    // Header: id, date, winner, players, mvps
+    // Header: id, date, winner, players, mvps, scapegoats
     return rows.slice(1).map((row) => {
         let players = [];
         let mvps = [];
+        let scapegoats = [];
         try {
             players = JSON.parse(row[3] || "[]");
         } catch {
@@ -66,12 +67,18 @@ export const fetchGames = async () => {
         } catch {
             mvps = [];
         }
+        try {
+            scapegoats = JSON.parse(row[5] || "[]");
+        } catch {
+            scapegoats = [];
+        }
         return {
             id: row[0] || "",
             date: row[1] || "",
             winner: row[2] || "",
             players,
             mvps,
+            scapegoats,
         };
     });
 };
@@ -159,6 +166,7 @@ export const sheetAddGame = (game) =>
         winner: game.winner,
         players: JSON.stringify(game.players),
         mvps: JSON.stringify(game.mvps || []),
+        scapegoats: JSON.stringify(game.scapegoats || []),
     });
 
 export const sheetDeleteGame = (gameId) =>
@@ -187,6 +195,7 @@ export const sheetImportData = (data) =>
             winner: g.winner,
             players: JSON.stringify(g.players),
             mvps: JSON.stringify(g.mvps || []),
+            scapegoats: JSON.stringify(g.scapegoats || []),
         })),
         customRoles: (data.customRoles || []).map((r) => ({
             key: r.key,

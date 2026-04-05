@@ -189,7 +189,7 @@ export const syncFromSheets = async () => {
                     mergedGameIds.add(rg.id);
                     const lg = localGameMap.get(rg.id);
                     if (lg) {
-                        return { ...lg, ...rg, mvps: rg.mvps && rg.mvps.length > 0 ? rg.mvps : (lg.mvps || []), mode: rg.mode || lg.mode };
+                        return { ...lg, ...rg, mvps: rg.mvps && rg.mvps.length > 0 ? rg.mvps : (lg.mvps || []), scapegoats: rg.scapegoats && rg.scapegoats.length > 0 ? rg.scapegoats : (lg.scapegoats || []), mode: rg.mode || lg.mode };
                     }
                     return rg;
                 });
