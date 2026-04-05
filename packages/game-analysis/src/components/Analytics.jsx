@@ -826,7 +826,7 @@ export const Analytics = () => {
                                   <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                                     {detail.partners.slice(0, 6).map((p) => (
                                       <Chip key={p.name} bgColor="#f1f3f4" color="#5f6368" style={{ fontSize: "0.75rem" }}>
-                                        {p.name} <span style={{ color: "#9aa0a6" }}>({p.gamesPlayed}局 {(p.winRate * 100).toFixed(0)}%胜)</span>
+                                        {p.name} <span style={{ color: "#9aa0a6" }}>({p.gamesPlayed}局同场{p.sameSide > 0 ? `, 同阵营${p.sameSide}局 ${(p.sameSideWinRate * 100).toFixed(0)}%胜` : ""})</span>
                                       </Chip>
                                     ))}
                                   </div>

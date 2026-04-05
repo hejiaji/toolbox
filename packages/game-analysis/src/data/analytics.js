@@ -255,12 +255,25 @@ export const getPlayerDetailedStats = (games, playerName) => {
             if (won) roleMap[r].wins++;
         });
 
-        // Partners (other players in the same game on the same side)
+        // Partners (other players in the same game)
         game.players.forEach((other) => {
             if (other.name === playerName) return;
-            if (!partnerMap[other.name]) partnerMap[other.name] = { gamesPlayed: 0, wins: 0 };
+            if (!partnerMap[other.name]) partnerMap[other.name] = { gamesPlayed: 0, sameSide: 0, sameSideWins: 0 };
             partnerMap[other.name].gamesPlayed++;
-            if (won) partnerMap[other.name].wins++;
+
+            // Check if on the same side
+            let otherIsWolfSide;
+            if (other.side) {
+                otherIsWolfSide = other.side === "wolf";
+            } else {
+                const oFaction = getFactionForRole(other.role);
+                const oFaction2 = other.role2 ? getFactionForRole(other.role2) : null;
+                otherIsWolfSide = oFaction === FACTIONS.WOLF || oFaction2 === FACTIONS.WOLF;
+            }
+            if (playerIsWolfSide === otherIsWolfSide) {
+                partnerMap[other.name].sameSide++;
+                if (won) partnerMap[other.name].sameSideWins++;
+            }
         });
     });
 
@@ -276,11 +289,12 @@ export const getPlayerDetailedStats = (games, playerName) => {
         .sort((a, b) => b.played - a.played);
 
     const partners = Object.entries(partnerMap)
-        .map(([name, { gamesPlayed: pg, wins: pw }]) => ({
+        .map(([name, { gamesPlayed: pg, sameSide, sameSideWins }]) => ({
             name,
             gamesPlayed: pg,
-            wins: pw,
-            winRate: pg > 0 ? pw / pg : 0,
+            sameSide,
+            sameSideWins,
+            sameSideWinRate: sameSide > 0 ? sameSideWins / sameSide : 0,
         }))
         .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
         .slice(0, 10);
