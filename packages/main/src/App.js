@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { HashRouter as Router, Link, useLocation } from "react-router-dom";
 import { Routes } from "./routes";
+import { initGA, trackPageView } from "./ga";
 
 const TOOL_ITEMS = [
     {
@@ -157,16 +158,46 @@ const ToolIndex = () => {
 
 const AppLayout = () => {
     const location = useLocation();
+
+    useEffect(() => {
+        trackPageView(location.pathname);
+    }, [location]);
     const showTopBar = location.pathname !== "/" && !location.pathname.startsWith("/video");
     const showIndex = location.pathname === "/";
     const isVideo = location.pathname.startsWith("/video");
+
+    const isGameAnalysis = location.pathname.startsWith("/game-analysis");
 
     return (
         <div className="app-shell">
             {showTopBar ? (
                 <header className="app-topbar">
-                    <Link to="/" className="app-topbar__title">Toolbox</Link>
-                    <Link to="/" className="app-topbar__link">All tools</Link>
+                    {isGameAnalysis ? (
+                        <>
+                            <span className="app-topbar__title" style={{ cursor: "default" }}>🐺 狼人杀大法官数据</span>
+                            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                                <Link
+                                    to="/game-analysis/entry"
+                                    className="app-topbar__link"
+                                    style={location.pathname === "/game-analysis/entry" ? { fontWeight: 600, opacity: 1 } : {}}
+                                >
+                                    记录
+                                </Link>
+                                <Link
+                                    to="/game-analysis/analytics"
+                                    className="app-topbar__link"
+                                    style={location.pathname === "/game-analysis/analytics" ? { fontWeight: 600, opacity: 1 } : {}}
+                                >
+                                    分析
+                                </Link>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/" className="app-topbar__title">Toolbox</Link>
+                            <Link to="/" className="app-topbar__link">All tools</Link>
+                        </>
+                    )}
                 </header>
             ) : null}
             <main className="app-main" style={isVideo ? { padding: 0 } : {}}>
@@ -178,6 +209,10 @@ const AppLayout = () => {
 };
 
 function App() {
+    useEffect(() => {
+        initGA();
+    }, []);
+
     return (
         <Router basename="/">
             <AppLayout />

@@ -16,6 +16,9 @@ import {
   getPlayerStats,
   getRoleStats,
   getGameHistory,
+  getAvailableYears,
+  filterGamesByYear,
+  getPlayerDetailedStats,
 } from '../data/analytics';
 import PieChart from './PieChart';
 import BarChart from './BarChart';
@@ -394,6 +397,10 @@ export const Analytics = () => {
   // Sync status: "idle" | "syncing" | "synced" | "error"
   const [syncStatus, setSyncStatus] = useState("idle");
   const [expandedGameId, setExpandedGameId] = useState(null);
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [expandedPlayer, setExpandedPlayer] = useState(null);
+  const [playerSortKey, setPlayerSortKey] = useState("gamesPlayed");
+  const [playerSortAsc, setPlayerSortAsc] = useState(false);
 
   // Sync from Google Sheets on mount (if configured)
   useEffect(() => {
@@ -404,12 +411,40 @@ export const Analytics = () => {
   }, []);
 
   // Derive stats
-  const games = useMemo(() => data.games || [], [data]);
+  const allGames = useMemo(() => data.games || [], [data]);
   const customRoles = useMemo(() => data.customRoles || [], [data]);
+  const availableYears = useMemo(() => getAvailableYears(allGames), [allGames]);
+  const games = useMemo(() => filterGamesByYear(allGames, selectedYear), [allGames, selectedYear]);
   const overallWin = useMemo(() => getOverallWinRate(games), [games]);
   const playerStats = useMemo(() => getPlayerStats(games), [games]);
   const roleStats = useMemo(() => getRoleStats(games), [games]);
   const history = useMemo(() => getGameHistory(games), [games]);
+  const playerDetail = useMemo(
+    () => expandedPlayer ? getPlayerDetailedStats(games, expandedPlayer) : null,
+    [games, expandedPlayer]
+  );
+
+  const sortedPlayerStats = useMemo(() => {
+    return [...playerStats].sort((a, b) => {
+      const va = a[playerSortKey], vb = b[playerSortKey];
+      if (typeof va === "string") return playerSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+      return playerSortAsc ? va - vb : vb - va;
+    });
+  }, [playerStats, playerSortKey, playerSortAsc]);
+
+  const handlePlayerSort = (key) => {
+    if (playerSortKey === key) setPlayerSortAsc(!playerSortAsc);
+    else { setPlayerSortKey(key); setPlayerSortAsc(false); }
+  };
+
+  const sortArrow = (key) => {
+    const isActive = playerSortKey === key;
+    return (
+      <span style={{ color: isActive ? "#1a73e8" : "#dadce0", fontSize: "0.7rem", marginLeft: "2px" }}>
+        {isActive ? (playerSortAsc ? "▲" : "▼") : "⇅"}
+      </span>
+    );
+  };
 
   const isEmpty = games.length === 0;
 
@@ -579,26 +614,59 @@ export const Analytics = () => {
 
           {/* Player Performance */}
           <SectionCard>
-            <SectionTitle>玩家表现</SectionTitle>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+              <SectionTitle style={{ marginBottom: 0 }}>玩家表现</SectionTitle>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                <Chip
+                  bgColor={selectedYear === "all" ? "#e8f0fe" : "#f1f3f4"}
+                  color={selectedYear === "all" ? "#1a73e8" : "#5f6368"}
+                  style={{ cursor: "pointer", fontWeight: selectedYear === "all" ? 600 : 400 }}
+                  onClick={() => setSelectedYear("all")}
+                >
+                  总体
+                </Chip>
+                {availableYears.map((yr) => (
+                  <Chip
+                    key={yr}
+                    bgColor={selectedYear === yr ? "#e8f0fe" : "#f1f3f4"}
+                    color={selectedYear === yr ? "#1a73e8" : "#5f6368"}
+                    style={{ cursor: "pointer", fontWeight: selectedYear === yr ? 600 : 400 }}
+                    onClick={() => setSelectedYear(yr)}
+                  >
+                    {yr}
+                  </Chip>
+                ))}
+              </div>
+            </div>
             {playerStats.length > 0 && (
               <TableContainer>
                 <Table>
                   <thead>
                     <tr>
-                      <th>玩家</th>
-                      <th>总局数</th>
-                      <th>胜场</th>
-                      <th>败场</th>
-                      <th>胜率</th>
-                      <th>MVP</th>
+                      <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("name")}>玩家{sortArrow("name")}</th>
+                      <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("gamesPlayed")}>总局数{sortArrow("gamesPlayed")}</th>
+                      <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("wins")}>胜场{sortArrow("wins")}</th>
+                      <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("losses")}>败场{sortArrow("losses")}</th>
+                      <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("winRate")}>胜率{sortArrow("winRate")}</th>
+                      <th style={{cursor:"pointer",userSelect:"none"}} onClick={()=>handlePlayerSort("mvpCount")}>MVP{sortArrow("mvpCount")}</th>
                       <th>出场角色</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {playerStats.map((stat) => (
-                      <tr key={stat.name}>
+                    {sortedPlayerStats.map((stat) => {
+                      const isExpanded = expandedPlayer === stat.name;
+                      const detail = isExpanded ? getPlayerDetailedStats(games, stat.name) : null;
+                      return [
+                      <tr
+                        key={stat.name}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => setExpandedPlayer(isExpanded ? null : stat.name)}
+                      >
                         <td>
-                          <strong>{stat.name}</strong>
+                          <strong style={{ color: "#1a73e8" }}>{stat.name}</strong>
+                          <span style={{ color: "#9aa0a6", fontSize: "0.7rem", marginLeft: "4px" }}>
+                            {isExpanded ? "▲" : "▼"}
+                          </span>
                         </td>
                         <td>{stat.gamesPlayed}</td>
                         <td>{stat.wins}</td>
@@ -637,8 +705,135 @@ export const Analytics = () => {
                               })}
                           </TagContainer>
                         </td>
-                      </tr>
-                    ))}
+                      </tr>,
+                      isExpanded && detail && (
+                        <tr key={`${stat.name}_detail`}>
+                          <td colSpan={7} style={{ padding: 0, border: "none" }}>
+                            <div style={{
+                              background: "#f8f9fa",
+                              borderRadius: "12px",
+                              padding: "16px 20px",
+                              margin: "4px 0 12px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "16px",
+                            }}>
+                              {/* Stats overview */}
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "10px" }}>
+                                <div style={{ background: "white", borderRadius: "10px", padding: "10px 14px", textAlign: "center" }}>
+                                  <div style={{ fontSize: "0.75rem", color: "#5f6368" }}>狼人阵营胜率</div>
+                                  <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#c5221f" }}>
+                                    {detail.wolfSideGames > 0 ? `${(detail.wolfSideWinRate * 100).toFixed(0)}%` : "-"}
+                                  </div>
+                                  <div style={{ fontSize: "0.7rem", color: "#9aa0a6" }}>{detail.wolfSideWins}/{detail.wolfSideGames} 局</div>
+                                </div>
+                                <div style={{ background: "white", borderRadius: "10px", padding: "10px 14px", textAlign: "center" }}>
+                                  <div style={{ fontSize: "0.75rem", color: "#5f6368" }}>好人阵营胜率</div>
+                                  <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#137333" }}>
+                                    {detail.villageSideGames > 0 ? `${(detail.villageSideWinRate * 100).toFixed(0)}%` : "-"}
+                                  </div>
+                                  <div style={{ fontSize: "0.7rem", color: "#9aa0a6" }}>{detail.villageSideWins}/{detail.villageSideGames} 局</div>
+                                </div>
+                                <div style={{ background: "white", borderRadius: "10px", padding: "10px 14px", textAlign: "center" }}>
+                                  <div style={{ fontSize: "0.75rem", color: "#5f6368" }}>MVP 率</div>
+                                  <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#b45309" }}>
+                                    {detail.gamesPlayed > 0 ? `${(detail.mvpRate * 100).toFixed(0)}%` : "-"}
+                                  </div>
+                                  <div style={{ fontSize: "0.7rem", color: "#9aa0a6" }}>🏅 {detail.mvpCount} 次</div>
+                                </div>
+                                <div style={{ background: "white", borderRadius: "10px", padding: "10px 14px", textAlign: "center" }}>
+                                  <div style={{ fontSize: "0.75rem", color: "#5f6368" }}>最佳连胜</div>
+                                  <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#1a73e8" }}>
+                                    {detail.streak.best} 局
+                                  </div>
+                                  <div style={{ fontSize: "0.7rem", color: "#9aa0a6" }}>当前 {detail.streak.current} 连胜</div>
+                                </div>
+                                <div style={{ background: "white", borderRadius: "10px", padding: "10px 14px", textAlign: "center" }}>
+                                  <div style={{ fontSize: "0.75rem", color: "#5f6368" }}>标准模式胜率</div>
+                                  <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#5f6368" }}>
+                                    {detail.standardGames > 0 ? `${(detail.standardWinRate * 100).toFixed(0)}%` : "-"}
+                                  </div>
+                                  <div style={{ fontSize: "0.7rem", color: "#9aa0a6" }}>{detail.standardWins}/{detail.standardGames} 局</div>
+                                </div>
+                                <div style={{ background: "white", borderRadius: "10px", padding: "10px 14px", textAlign: "center" }}>
+                                  <div style={{ fontSize: "0.75rem", color: "#5f6368" }}>双身份模式胜率</div>
+                                  <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#1a73e8" }}>
+                                    {detail.doubleIdGames > 0 ? `${(detail.doubleIdWinRate * 100).toFixed(0)}%` : "-"}
+                                  </div>
+                                  <div style={{ fontSize: "0.7rem", color: "#9aa0a6" }}>{detail.doubleIdWins}/{detail.doubleIdGames} 局</div>
+                                </div>
+                              </div>
+
+                              {/* Recent form */}
+                              {detail.recentForm.length > 0 && (
+                                <div>
+                                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#5f6368", marginBottom: "6px" }}>近 {detail.recentForm.length} 场</div>
+                                  <div style={{ display: "flex", gap: "4px" }}>
+                                    {detail.recentForm.map((r, i) => (
+                                      <span key={i} style={{
+                                        width: "24px", height: "24px", borderRadius: "6px",
+                                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                        fontSize: "0.7rem", fontWeight: 600,
+                                        background: r === "W" ? "#e6f4ea" : "#fce8e6",
+                                        color: r === "W" ? "#137333" : "#c5221f",
+                                      }}>{r === "W" ? "胜" : "负"}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Role win rates */}
+                              {detail.roleWinRates.length > 0 && (
+                                <div>
+                                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#5f6368", marginBottom: "6px" }}>各角色胜率</div>
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                    {detail.roleWinRates.map((r) => {
+                                      const roleObj = getRoleByKey(r.roleKey, customRoles);
+                                      const faction = roleObj?.faction || FACTIONS.VILLAGER;
+                                      return (
+                                        <div key={r.roleKey} style={{
+                                          display: "flex", alignItems: "center", gap: "8px",
+                                          background: "white", borderRadius: "8px", padding: "6px 12px",
+                                        }}>
+                                          <Chip bgColor={getFactionBgColor(faction)} color={getFactionColor(faction)} style={{ fontSize: "0.75rem" }}>
+                                            {roleObj?.name || r.roleKey}
+                                          </Chip>
+                                          <div style={{ flex: 1, background: "#e8eaed", borderRadius: "4px", height: "6px" }}>
+                                            <div style={{
+                                              width: `${(r.winRate * 100).toFixed(0)}%`,
+                                              background: r.winRate >= 0.5 ? "#137333" : r.winRate >= 0.3 ? "#ea8600" : "#c5221f",
+                                              height: "100%", borderRadius: "4px",
+                                            }} />
+                                          </div>
+                                          <span style={{ fontSize: "0.75rem", color: "#5f6368", minWidth: "65px", textAlign: "right" }}>
+                                            {(r.winRate * 100).toFixed(0)}% ({r.wins}/{r.played})
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Top partners */}
+                              {detail.partners.length > 0 && (
+                                <div>
+                                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#5f6368", marginBottom: "6px" }}>常见队友</div>
+                                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                    {detail.partners.slice(0, 6).map((p) => (
+                                      <Chip key={p.name} bgColor="#f1f3f4" color="#5f6368" style={{ fontSize: "0.75rem" }}>
+                                        {p.name} <span style={{ color: "#9aa0a6" }}>({p.gamesPlayed}局 {(p.winRate * 100).toFixed(0)}%胜)</span>
+                                      </Chip>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ),
+                      ];
+                    })}
                   </tbody>
                 </Table>
               </TableContainer>
@@ -681,11 +876,9 @@ export const Analytics = () => {
                         <Chip bgColor={winnerBgColor} color={winnerColor}>
                           🏆 {winnerLabel}
                         </Chip>
-                        {isDoubleIdentity && (
-                          <Chip bgColor="#e8f0fe" color="#1a73e8">
-                            双身份
-                          </Chip>
-                        )}
+                        <Chip bgColor={isDoubleIdentity ? "#e8f0fe" : "#f1f3f4"} color={isDoubleIdentity ? "#1a73e8" : "#5f6368"}>
+                          {isDoubleIdentity ? "双身份" : "标准"}
+                        </Chip>
                         <span style={{ color: "#5f6368", fontSize: "0.8rem" }}>
                           {game.players.length} 人
                         </span>

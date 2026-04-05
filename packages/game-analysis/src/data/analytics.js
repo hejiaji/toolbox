@@ -133,6 +133,180 @@ export const getRoleStats = (games) => {
 };
 
 /**
+ * Filter games by year.
+ * Returns games whose date starts with the given year string (e.g. "2026").
+ * If year is null/undefined/"all", returns all games.
+ */
+export const filterGamesByYear = (games, year) => {
+    if (!year || year === "all") return games;
+    return games.filter((g) => g.date && g.date.startsWith(String(year)));
+};
+
+/**
+ * Get available years from game data.
+ * Returns sorted array of year strings, e.g. ["2025", "2026"].
+ */
+export const getAvailableYears = (games) => {
+    const years = new Set();
+    games.forEach((g) => {
+        if (g.date && g.date.length >= 4) {
+            years.add(g.date.slice(0, 4));
+        }
+    });
+    return [...years].sort().reverse();
+};
+
+/**
+ * Detailed stats for a single player across given games.
+ * Returns:
+ * {
+ *   name, gamesPlayed, wins, losses, winRate, mvpCount,
+ *   roles: { [roleKey]: count },
+ *   roleWinRates: [{ roleKey, roleName, faction, played, wins, winRate }],
+ *   wolfSideGames, wolfSideWins, wolfSideWinRate,
+ *   villageSideGames, villageSideWins, villageSideWinRate,
+ *   streak: { current, best },
+ *   recentForm: ["W","L","W",...] (last 10 games),
+ *   mvpRate,
+ *   partners: [{ name, gamesPlayed, wins, winRate }] (teammates sorted by games)
+ * }
+ */
+export const getPlayerDetailedStats = (games, playerName) => {
+    const roleMap = {};      // roleKey -> { played, wins }
+    const partnerMap = {};   // partnerName -> { gamesPlayed, wins }
+    let wolfSideGames = 0, wolfSideWins = 0;
+    let villageSideGames = 0, villageSideWins = 0;
+    let standardGames = 0, standardWins = 0;
+    let doubleIdGames = 0, doubleIdWins = 0;
+    let mvpCount = 0;
+    let wins = 0, losses = 0;
+    const results = []; // chronological W/L
+
+    // Current and best win streak
+    let currentStreak = 0, bestStreak = 0;
+
+    // Sort games chronologically
+    const sorted = [...games].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+    sorted.forEach((game) => {
+        const playerEntry = game.players.find((p) => p.name === playerName);
+        if (!playerEntry) return;
+
+        const isWolfWin = game.winner === WINNING_FACTIONS.WOLF;
+
+        // Determine side
+        let playerIsWolfSide;
+        if (playerEntry.side) {
+            playerIsWolfSide = playerEntry.side === "wolf";
+        } else {
+            const faction = getFactionForRole(playerEntry.role);
+            const faction2 = playerEntry.role2 ? getFactionForRole(playerEntry.role2) : null;
+            playerIsWolfSide = faction === FACTIONS.WOLF || faction2 === FACTIONS.WOLF;
+        }
+
+        const won = playerIsWolfSide === isWolfWin;
+
+        if (won) {
+            wins++;
+            currentStreak++;
+            if (currentStreak > bestStreak) bestStreak = currentStreak;
+        } else {
+            losses++;
+            currentStreak = 0;
+        }
+        results.push(won ? "W" : "L");
+
+        // Side stats
+        if (playerIsWolfSide) {
+            wolfSideGames++;
+            if (won) wolfSideWins++;
+        } else {
+            villageSideGames++;
+            if (won) villageSideWins++;
+        }
+
+        // Mode stats
+        if (game.mode === "double_identity") {
+            doubleIdGames++;
+            if (won) doubleIdWins++;
+        } else {
+            standardGames++;
+            if (won) standardWins++;
+        }
+
+        // MVP
+        if (game.mvps && game.mvps.includes(playerName)) {
+            mvpCount++;
+        }
+
+        // Role tracking
+        const roles = [playerEntry.role];
+        if (playerEntry.role2) roles.push(playerEntry.role2);
+        roles.forEach((r) => {
+            if (!roleMap[r]) roleMap[r] = { played: 0, wins: 0 };
+            roleMap[r].played++;
+            if (won) roleMap[r].wins++;
+        });
+
+        // Partners (other players in the same game on the same side)
+        game.players.forEach((other) => {
+            if (other.name === playerName) return;
+            if (!partnerMap[other.name]) partnerMap[other.name] = { gamesPlayed: 0, wins: 0 };
+            partnerMap[other.name].gamesPlayed++;
+            if (won) partnerMap[other.name].wins++;
+        });
+    });
+
+    const gamesPlayed = wins + losses;
+
+    const roleWinRates = Object.entries(roleMap)
+        .map(([roleKey, { played, wins: rWins }]) => ({
+            roleKey,
+            played,
+            wins: rWins,
+            winRate: played > 0 ? rWins / played : 0,
+        }))
+        .sort((a, b) => b.played - a.played);
+
+    const partners = Object.entries(partnerMap)
+        .map(([name, { gamesPlayed: pg, wins: pw }]) => ({
+            name,
+            gamesPlayed: pg,
+            wins: pw,
+            winRate: pg > 0 ? pw / pg : 0,
+        }))
+        .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
+        .slice(0, 10);
+
+    return {
+        name: playerName,
+        gamesPlayed,
+        wins,
+        losses,
+        winRate: gamesPlayed > 0 ? wins / gamesPlayed : 0,
+        mvpCount,
+        mvpRate: gamesPlayed > 0 ? mvpCount / gamesPlayed : 0,
+        roles: roleMap,
+        roleWinRates,
+        wolfSideGames,
+        wolfSideWins,
+        wolfSideWinRate: wolfSideGames > 0 ? wolfSideWins / wolfSideGames : 0,
+        villageSideGames,
+        villageSideWins,
+        villageSideWinRate: villageSideGames > 0 ? villageSideWins / villageSideGames : 0,
+        streak: { current: currentStreak, best: bestStreak },
+        recentForm: results.slice(-10),
+        partners,
+        standardGames,
+        standardWins,
+        standardWinRate: standardGames > 0 ? standardWins / standardGames : 0,
+        doubleIdGames,
+        doubleIdWins,
+        doubleIdWinRate: doubleIdGames > 0 ? doubleIdWins / doubleIdGames : 0,
+    };
+};
+
+/**
  * Game history formatted for display.
  */
 export const getGameHistory = (games) => {

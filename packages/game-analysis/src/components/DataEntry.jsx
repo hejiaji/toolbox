@@ -172,6 +172,7 @@ const Select = styled.select`
   background: white;
   cursor: pointer;
   transition: border-color 0.2s;
+  color: #202124;
 
   &:focus {
     outline: none;
@@ -230,18 +231,21 @@ const Button = styled.button`
 `;
 
 const PlayerRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr 80px 40px;
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   background: #f8f9fa;
   border-radius: 12px;
   padding: 10px 14px;
   margin-bottom: 8px;
   align-items: center;
 
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  & > ${Select} {
+    flex: 1 1 120px;
+    width: auto;
+    min-width: 0;
+    padding: 6px 10px;
+    font-size: 0.85rem;
   }
 `;
 
@@ -249,6 +253,8 @@ const PlayerName = styled.div`
   font-size: 0.9rem;
   font-weight: 500;
   color: #202124;
+  flex: 0 0 auto;
+  min-width: 60px;
 `;
 
 const SwitchContainer = styled.div`
@@ -929,19 +935,22 @@ export const DataEntry = () => {
                                 {editPlayers.map((p, idx) => (
                                   <div key={idx} style={{ display: "flex", gap: "6px", alignItems: "center", background: "#f8f9fa", borderRadius: "8px", padding: "6px 10px" }}>
                                     <span style={{ fontWeight: 500, minWidth: "60px", fontSize: "0.85rem" }}>{p.name}</span>
-                                    <Select
+                                    <select
                                       value={p.role}
                                       onChange={(e) => {
                                         const copy = [...editPlayers];
                                         copy[idx] = { ...copy[idx], role: e.target.value };
                                         setEditPlayers(copy);
                                       }}
-                                      style={{ fontSize: "0.8rem", padding: "2px 6px", borderRadius: "6px", flex: 1 }}
+                                      style={{ fontSize: "0.8rem", padding: "6px 8px", borderRadius: "6px", flex: 1, border: "1px solid #dadce0", background: "white", color: "#202124", fontFamily: "'Google Sans', Roboto, sans-serif" }}
                                     >
+                                      {!allRoles.some((r) => r.key === p.role) && (
+                                        <option value={p.role}>{p.role} (未知角色)</option>
+                                      )}
                                       {allRoles.map((r) => (
                                         <option key={r.key} value={r.key}>{r.name}</option>
                                       ))}
-                                    </Select>
+                                    </select>
                                     {editMode === GAME_MODES.DOUBLE_IDENTITY && (
                                       <Select
                                         value={p.role2 || "villager"}
@@ -957,19 +966,26 @@ export const DataEntry = () => {
                                         ))}
                                       </Select>
                                     )}
-                                    <Select
-                                      value={p.side || ""}
-                                      onChange={(e) => {
-                                        const copy = [...editPlayers];
-                                        copy[idx] = { ...copy[idx], side: e.target.value || undefined };
-                                        setEditPlayers(copy);
-                                      }}
-                                      style={{ fontSize: "0.75rem", padding: "2px 6px", borderRadius: "6px", minWidth: "80px" }}
-                                    >
-                                      <option value="">自动</option>
-                                      <option value="village">好人</option>
-                                      <option value="wolf">狼人</option>
-                                    </Select>
+                                    {(() => {
+                                      const r1 = allRoles.find((r) => r.key === p.role);
+                                      const r2 = p.role2 ? allRoles.find((r) => r.key === p.role2) : null;
+                                      const needsSide = (r1 && r1.needsSideOverride) || (r2 && r2.needsSideOverride);
+                                      if (!needsSide) return null;
+                                      return (
+                                        <Select
+                                          value={p.side || "village"}
+                                          onChange={(e) => {
+                                            const copy = [...editPlayers];
+                                            copy[idx] = { ...copy[idx], side: e.target.value };
+                                            setEditPlayers(copy);
+                                          }}
+                                          style={{ fontSize: "0.75rem", padding: "2px 6px", borderRadius: "6px", minWidth: "80px" }}
+                                        >
+                                          <option value="village">好人</option>
+                                          <option value="wolf">狼人</option>
+                                        </Select>
+                                      );
+                                    })()}
                                   </div>
                                 ))}
                               </div>
