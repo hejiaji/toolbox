@@ -34,6 +34,8 @@ import {
 } from "./sheetsApi";
 
 const STORAGE_KEY = "werewolf_game_data";
+const DELETED_IDS_KEY = "werewolf_deleted_ids";
+const RETRY_QUEUE_KEY = "werewolf_retry_queue";
 
 const defaultData = () => ({
     players: [],
@@ -63,6 +65,92 @@ export const saveData = (data) => {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Deletion tracking                                                  */
+/* ------------------------------------------------------------------ */
+
+const loadDeletedIds = () => {
+    try {
+        return new Set(JSON.parse(localStorage.getItem(DELETED_IDS_KEY) || "[]"));
+    } catch { return new Set(); }
+};
+
+const saveDeletedIds = (ids) => {
+    localStorage.setItem(DELETED_IDS_KEY, JSON.stringify([...ids]));
+};
+
+const markAsDeleted = (gameId) => {
+    const ids = loadDeletedIds();
+    ids.add(gameId);
+    saveDeletedIds(ids);
+};
+
+const unmarkDeleted = (gameId) => {
+    const ids = loadDeletedIds();
+    ids.delete(gameId);
+    saveDeletedIds(ids);
+};
+
+/* ------------------------------------------------------------------ */
+/*  Retry queue for failed background syncs                            */
+/* ------------------------------------------------------------------ */
+
+const loadRetryQueue = () => {
+    try {
+        return JSON.parse(localStorage.getItem(RETRY_QUEUE_KEY) || "[]");
+    } catch { return []; }
+};
+
+const saveRetryQueue = (queue) => {
+    localStorage.setItem(RETRY_QUEUE_KEY, JSON.stringify(queue));
+};
+
+const addToRetryQueue = (action) => {
+    const queue = loadRetryQueue();
+    queue.push({ ...action, timestamp: Date.now() });
+    saveRetryQueue(queue);
+};
+
+const processRetryQueue = async () => {
+    const queue = loadRetryQueue();
+    if (queue.length === 0) return;
+
+    const remaining = [];
+    for (const item of queue) {
+        try {
+            switch (item.type) {
+                case "deleteGame":
+                    await sheetDeleteGame(item.gameId);
+                    unmarkDeleted(item.gameId);
+                    break;
+                case "addGame":
+                    await sheetAddGame(item.game);
+                    break;
+                case "addPlayer":
+                    await sheetAddPlayer(item.name);
+                    break;
+                case "removePlayer":
+                    await sheetRemovePlayer(item.name);
+                    break;
+                case "addRole":
+                    await sheetAddRole(item.role);
+                    break;
+                case "removeRole":
+                    await sheetRemoveRole(item.roleKey);
+                    break;
+                default:
+                    break;
+            }
+        } catch {
+            // Keep in queue if less than 7 days old
+            if (Date.now() - item.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                remaining.push(item);
+            }
+        }
+    }
+    saveRetryQueue(remaining);
+};
+
+/* ------------------------------------------------------------------ */
 /*  Google Sheets sync                                                 */
 /* ------------------------------------------------------------------ */
 
@@ -76,10 +164,14 @@ export const syncFromSheets = async () => {
         return loadData();
     }
 
+    // Process any pending retries first
+    await processRetryQueue().catch(() => {});
+
     try {
         const remote = await fetchAllData();
         if (remote) {
             const local = loadData();
+            const deletedIds = loadDeletedIds();
 
             // Merge players (union)
             const allPlayers = [...new Set([
@@ -88,18 +180,20 @@ export const syncFromSheets = async () => {
             ])];
 
             // Merge games (union by id, merge fields for duplicates)
+            // Filter out any games that were locally deleted
             const localGameMap = new Map((local.games || []).map((g) => [g.id, g]));
             const mergedGameIds = new Set();
-            const mergedGames = (remote.games || []).map((rg) => {
-                mergedGameIds.add(rg.id);
-                const lg = localGameMap.get(rg.id);
-                if (lg) {
-                    // Merge: local fields fill in anything remote is missing
-                    return { ...lg, ...rg, mvps: rg.mvps && rg.mvps.length > 0 ? rg.mvps : (lg.mvps || []), mode: rg.mode || lg.mode };
-                }
-                return rg;
-            });
-            const localOnlyGames = (local.games || []).filter((g) => !mergedGameIds.has(g.id));
+            const mergedGames = (remote.games || [])
+                .filter((rg) => !deletedIds.has(rg.id))
+                .map((rg) => {
+                    mergedGameIds.add(rg.id);
+                    const lg = localGameMap.get(rg.id);
+                    if (lg) {
+                        return { ...lg, ...rg, mvps: rg.mvps && rg.mvps.length > 0 ? rg.mvps : (lg.mvps || []), mode: rg.mode || lg.mode };
+                    }
+                    return rg;
+                });
+            const localOnlyGames = (local.games || []).filter((g) => !mergedGameIds.has(g.id) && !deletedIds.has(g.id));
             const allGames = [...mergedGames, ...localOnlyGames];
 
             // Merge custom roles (union by key, local wins on conflict)
@@ -227,7 +321,16 @@ export const deleteGame = (gameId) => {
     const data = loadData();
     data.games = data.games.filter((g) => g.id !== gameId);
     saveData(data);
-    backgroundSync(() => sheetDeleteGame(gameId));
+    markAsDeleted(gameId);
+    backgroundSync(async () => {
+        try {
+            await sheetDeleteGame(gameId);
+            unmarkDeleted(gameId);
+        } catch (err) {
+            addToRetryQueue({ type: "deleteGame", gameId });
+            throw err;
+        }
+    });
     return data;
 };
 
