@@ -109,9 +109,9 @@ export const fetchAllData = async () => {
     }
 
     const [players, games, customRoles] = await Promise.all([
-        fetchPlayers(),
-        fetchGames(),
-        fetchCustomRoles().catch(() => []), // graceful fallback if Roles tab doesn't exist yet
+        fetchPlayers().catch((err) => { console.warn("Failed to fetch players:", err); return []; }),
+        fetchGames().catch((err) => { console.warn("Failed to fetch games:", err); return []; }),
+        fetchCustomRoles().catch((err) => { console.warn("Failed to fetch roles:", err); return []; }),
     ]);
     return { players, games, customRoles };
 };

@@ -169,9 +169,11 @@ export const syncFromSheets = async () => {
 
     try {
         const remote = await fetchAllData();
+        console.log("[sync] Remote data:", remote?.games?.length, "games,", remote?.players?.length, "players");
         if (remote) {
             const local = loadData();
             const deletedIds = loadDeletedIds();
+            console.log("[sync] Local data:", local.games?.length, "games. Deleted IDs:", deletedIds.size);
 
             // Merge players (union)
             const allPlayers = [...new Set([
