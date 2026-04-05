@@ -772,6 +772,22 @@ export const DataEntry = () => {
                         ))}
                       </Select>
                     )}
+                    {(() => {
+                      const r1 = getAllRoles(customRoles).find((r) => r.key === player.role);
+                      const r2 = player.role2 ? getAllRoles(customRoles).find((r) => r.key === player.role2) : null;
+                      const needsSide = (r1 && r1.needsSideOverride) || (r2 && r2.needsSideOverride);
+                      if (!needsSide) return null;
+                      return (
+                        <Select
+                          value={player.side || "village"}
+                          onChange={(e) => updateGamePlayer(idx, "side", e.target.value)}
+                          style={{ fontSize: "0.8rem", minWidth: "90px" }}
+                        >
+                          <option value="village">好人阵营</option>
+                          <option value="wolf">狼人阵营</option>
+                        </Select>
+                      );
+                    })()}
                     <DeleteButton onClick={() => removeGamePlayer(idx)}>
                       <DeleteOutlined />
                     </DeleteButton>
@@ -941,6 +957,26 @@ export const DataEntry = () => {
                                         ))}
                                       </Select>
                                     )}
+                                    {(() => {
+                                      const r1 = allRoles.find((r) => r.key === p.role);
+                                      const r2 = p.role2 ? allRoles.find((r) => r.key === p.role2) : null;
+                                      const needsSide = (r1 && r1.needsSideOverride) || (r2 && r2.needsSideOverride);
+                                      if (!needsSide) return null;
+                                      return (
+                                        <Select
+                                          value={p.side || "village"}
+                                          onChange={(e) => {
+                                            const copy = [...editPlayers];
+                                            copy[idx] = { ...copy[idx], side: e.target.value };
+                                            setEditPlayers(copy);
+                                          }}
+                                          style={{ fontSize: "0.75rem", padding: "2px 6px", borderRadius: "6px", minWidth: "80px" }}
+                                        >
+                                          <option value="village">好人</option>
+                                          <option value="wolf">狼人</option>
+                                        </Select>
+                                      );
+                                    })()}
                                   </div>
                                 ))}
                               </div>

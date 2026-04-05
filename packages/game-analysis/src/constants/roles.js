@@ -56,6 +56,7 @@ export const DEFAULT_ROLES = [
     { key: "white_wolf", name: "白狼王", faction: FACTIONS.WOLF },
     { key: "hidden_wolf", name: "隐狼", faction: FACTIONS.WOLF },
     { key: "wolf_beauty", name: "狼美人", faction: FACTIONS.WOLF },
+    { key: "half_blood", name: "混血儿", faction: FACTIONS.VILLAGER, needsSideOverride: true },
     { key: "villager", name: "村民", faction: FACTIONS.VILLAGER },
     { key: "seer", name: "预言家", faction: FACTIONS.GOD },
     { key: "witch", name: "女巫", faction: FACTIONS.GOD },

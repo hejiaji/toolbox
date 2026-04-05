@@ -45,11 +45,16 @@ export const getPlayerStats = (games) => {
             const stat = map[p.name];
             stat.gamesPlayed += 1;
 
-            // Determine faction from primary role (or either role in double-identity)
-            const faction = getFactionForRole(p.role);
-            const faction2 = p.role2 ? getFactionForRole(p.role2) : null;
-            // Player is wolf-side if either role is wolf
-            const playerIsWolfSide = faction === FACTIONS.WOLF || faction2 === FACTIONS.WOLF;
+            // Determine which side the player is on
+            // If player has a side override (e.g. 混血儿), use that
+            let playerIsWolfSide;
+            if (p.side) {
+                playerIsWolfSide = p.side === "wolf";
+            } else {
+                const faction = getFactionForRole(p.role);
+                const faction2 = p.role2 ? getFactionForRole(p.role2) : null;
+                playerIsWolfSide = faction === FACTIONS.WOLF || faction2 === FACTIONS.WOLF;
+            }
             const won = playerIsWolfSide === isWolfWin;
 
             if (won) {
@@ -94,10 +99,15 @@ export const getRoleStats = (games) => {
             const roles = [p.role];
             if (p.role2) roles.push(p.role2);
 
-            // Determine win: wolf-side if any role is wolf
-            const playerIsWolfSide = roles.some(
-                (r) => getFactionForRole(r) === FACTIONS.WOLF
-            );
+            // Determine win: use side override if present, otherwise check role factions
+            let playerIsWolfSide;
+            if (p.side) {
+                playerIsWolfSide = p.side === "wolf";
+            } else {
+                playerIsWolfSide = roles.some(
+                    (r) => getFactionForRole(r) === FACTIONS.WOLF
+                );
+            }
             const won = playerIsWolfSide === isWolfWin;
 
             roles.forEach((role) => {

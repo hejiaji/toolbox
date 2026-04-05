@@ -393,6 +393,7 @@ export const Analytics = () => {
 
   // Sync status: "idle" | "syncing" | "synced" | "error"
   const [syncStatus, setSyncStatus] = useState("idle");
+  const [expandedGameId, setExpandedGameId] = useState(null);
 
   // Sync from Google Sheets on mount (if configured)
   useEffect(() => {
@@ -666,8 +667,14 @@ export const Analytics = () => {
 
                 const isDoubleIdentity = game.mode === GAME_MODES.DOUBLE_IDENTITY;
 
+                const isExpanded = expandedGameId === game.id;
+
                 return (
-                  <HistoryCard key={game.id}>
+                  <HistoryCard
+                    key={game.id}
+                    onClick={() => setExpandedGameId(isExpanded ? null : game.id)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <DateLabel>{game.date}</DateLabel>
                     <HistoryContent>
                       <HistoryWinner>
@@ -679,49 +686,70 @@ export const Analytics = () => {
                             双身份
                           </Chip>
                         )}
-                      </HistoryWinner>
-                      <HistoryPlayers>
-                        {game.players.map((player, idx) => {
-                          const roleObj = getRoleByKey(player.role, customRoles);
-                          const role2Obj = player.role2 ? getRoleByKey(player.role2, customRoles) : null;
-                          const faction =
-                            roleObj?.faction || FACTIONS.VILLAGER;
-                          const roleColor = getFactionColor(faction);
-                          const roleBgColor = getFactionBgColor(faction);
-
-                          const roleLabel = roleObj?.name || player.role;
-                          const role2Label = role2Obj ? ` + ${role2Obj.name}` : '';
-                          const titleText = `${player.name} - ${roleLabel}${role2Label}`;
-
-                          return (
-                            <PlayerChip
-                              key={idx}
-                              bgColor={roleBgColor}
-                              color={roleColor}
-                              title={titleText}
-                            >
-                              {player.name}
-                            </PlayerChip>
-                          );
-                        })}
-                      </HistoryPlayers>
-                    </HistoryContent>
-                    <PlayerCount>
-                      {game.players.length} 人
-                      {game.mvps && game.mvps.length > 0 && (
-                        <span style={{
-                          color: "#b45309",
-                          fontSize: "0.75rem",
-                          fontWeight: 500,
-                          background: "#fef3c7",
-                          padding: "2px 8px",
-                          borderRadius: "12px",
-                          marginLeft: "6px",
-                        }}>
-                          🏅 {game.mvps.join(", ")}
+                        <span style={{ color: "#5f6368", fontSize: "0.8rem" }}>
+                          {game.players.length} 人
                         </span>
-                      )}
-                    </PlayerCount>
+                        {game.mvps && game.mvps.length > 0 && (
+                          <Chip bgColor="#fef3c7" color="#b45309">
+                            🏅 {game.mvps.join(", ")}
+                          </Chip>
+                        )}
+                        <span style={{ color: "#9aa0a6", fontSize: "0.75rem", marginLeft: "auto" }}>
+                          {isExpanded ? "▲ 收起" : "▼ 详情"}
+                        </span>
+                      </HistoryWinner>
+                    </HistoryContent>
+                    {isExpanded && (
+                      <div style={{ marginTop: "12px", borderTop: "1px solid #e8eaed", paddingTop: "12px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "8px" }}>
+                          {game.players.map((player, idx) => {
+                            const roleObj = getRoleByKey(player.role, customRoles);
+                            const role2Obj = player.role2 ? getRoleByKey(player.role2, customRoles) : null;
+                            const faction = roleObj?.faction || FACTIONS.VILLAGER;
+                            const roleColor = getFactionColor(faction);
+                            const roleBgColor = getFactionBgColor(faction);
+                            const isMvp = game.mvps && game.mvps.includes(player.name);
+                            const sideOverride = player.side;
+
+                            return (
+                              <div key={idx} style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                background: "#f8f9fa",
+                                borderRadius: "10px",
+                                padding: "8px 12px",
+                              }}>
+                                <span style={{ fontWeight: 500, fontSize: "0.9rem", color: "#202124" }}>
+                                  {isMvp && "⭐ "}{player.name}
+                                </span>
+                                <Chip bgColor={roleBgColor} color={roleColor} style={{ fontSize: "0.75rem" }}>
+                                  {roleObj?.name || player.role}
+                                </Chip>
+                                {role2Obj && (
+                                  <Chip
+                                    bgColor={getFactionBgColor(role2Obj.faction)}
+                                    color={getFactionColor(role2Obj.faction)}
+                                    style={{ fontSize: "0.75rem" }}
+                                  >
+                                    {role2Obj.name}
+                                  </Chip>
+                                )}
+                                {sideOverride && (
+                                  <Chip
+                                    bgColor={sideOverride === "wolf" ? "#fce8e6" : "#e6f4ea"}
+                                    color={sideOverride === "wolf" ? "#c5221f" : "#137333"}
+                                    style={{ fontSize: "0.7rem" }}
+                                  >
+                                    {sideOverride === "wolf" ? "狼阵营" : "好人阵营"}
+                                  </Chip>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </HistoryCard>
                 );
               })}
