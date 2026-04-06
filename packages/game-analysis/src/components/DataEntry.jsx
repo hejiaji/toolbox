@@ -477,6 +477,17 @@ const DatePickerInput = styled(Input)`
 `;
 
 // ============================================================================
+const formatGameDate = (dateStr) => {
+  if (!dateStr) return "无日期";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const hours = d.getHours().toString().padStart(2, "0");
+  const mins = d.getMinutes().toString().padStart(2, "0");
+  return dateStr.includes("T") ? `${month}/${day} ${hours}:${mins}` : `${month}/${day}`;
+};
+
 // MAIN COMPONENT
 // ============================================================================
 
@@ -964,7 +975,7 @@ export const DataEntry = () => {
                             /* ---- EDIT MODE ---- */
                             <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
                               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                                <GameDate>{game.date}</GameDate>
+                                <GameDate>{formatGameDate(game.date)}</GameDate>
                                 <Select value={editWinner} onChange={(e) => setEditWinner(e.target.value)} style={{ fontSize: "0.85rem", padding: "4px 8px", borderRadius: "8px" }}>
                                   <option value={WINNING_FACTIONS.WOLF}>🐺 狼人胜</option>
                                   <option value={WINNING_FACTIONS.VILLAGE}>🏘️ 好人胜</option>
@@ -1103,7 +1114,7 @@ export const DataEntry = () => {
                             /* ---- VIEW MODE ---- */
                             <>
                               <GameMeta>
-                                <GameDate>{game.date}</GameDate>
+                                <GameDate>{formatGameDate(game.date)}</GameDate>
                                 <GameWinner winner={game.winner}>
                                   {winnerLabel}
                                 </GameWinner>

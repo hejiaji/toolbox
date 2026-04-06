@@ -874,7 +874,14 @@ export const Analytics = () => {
                     onClick={() => setExpandedGameId(isExpanded ? null : game.id)}
                     style={{ cursor: "pointer" }}
                   >
-                    <DateLabel>{game.date}</DateLabel>
+                    <DateLabel>{(() => {
+                      if (!game.date) return "无日期";
+                      const d = new Date(game.date);
+                      if (isNaN(d.getTime())) return game.date;
+                      const m = d.getMonth() + 1, day = d.getDate();
+                      const h = d.getHours().toString().padStart(2,"0"), min = d.getMinutes().toString().padStart(2,"0");
+                      return game.date.includes("T") ? `${m}/${day} ${h}:${min}` : `${m}/${day}`;
+                    })()}</DateLabel>
                     <HistoryContent>
                       <HistoryWinner>
                         <Chip bgColor={winnerBgColor} color={winnerColor}>
