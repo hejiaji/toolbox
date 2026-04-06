@@ -985,7 +985,10 @@ export const DataEntry = () => {
               ) : (
                 <GameHistoryList>
                   {[...games]
-                    .reverse()
+                    .sort((a, b) => {
+                      if (a.date && b.date) return b.date.localeCompare(a.date);
+                      return 0;
+                    })
                     .map((game) => {
                       const winnerLabel =
                         game.winner === WINNING_FACTIONS.WOLF
