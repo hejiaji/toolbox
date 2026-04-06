@@ -828,26 +828,39 @@ export const DataEntry = () => {
               )}
 
               <FormGroup style={{ marginTop: "16px" }}>
-                <Label>添加玩家</Label>
-                <Select value="" onChange={(e) => {
-                  const newPlayer = {
-                    name: e.target.value,
-                    role: "villager",
-                  };
-                  if (gameMode === GAME_MODES.DOUBLE_IDENTITY) {
-                    newPlayer.role2 = "villager";
-                  }
-                  setGamePlayers([...gamePlayers, newPlayer]);
-                }}>
-                  <option value="">选择玩家...</option>
-                  {data.players
-                    .filter((p) => !gamePlayers.some((gp) => gp.name === p))
-                    .map((player) => (
-                      <option key={player} value={player}>
-                        {player}
-                      </option>
-                    ))}
-                </Select>
+                <Label>{"添加玩家（点击选择）"}</Label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {data.players.map((player) => {
+                    const isAdded = gamePlayers.some((gp) => gp.name === player);
+                    return (
+                      <Chip
+                        key={player}
+                        style={{
+                          cursor: "pointer",
+                          background: isAdded ? "#e8f0fe" : "#f1f3f4",
+                          color: isAdded ? "#1a73e8" : "#5f6368",
+                          fontWeight: isAdded ? 600 : 400,
+                          border: isAdded ? "1.5px solid #1a73e8" : "1.5px solid transparent",
+                        }}
+                        onClick={() => {
+                          if (isAdded) {
+                            setGamePlayers(gamePlayers.filter((gp) => gp.name !== player));
+                            setGameMvps(gameMvps.filter((n) => n !== player));
+                            setGameScapegoats(gameScapegoats.filter((n) => n !== player));
+                          } else {
+                            const newPlayer = { name: player, role: "villager" };
+                            if (gameMode === GAME_MODES.DOUBLE_IDENTITY) {
+                              newPlayer.role2 = "villager";
+                            }
+                            setGamePlayers([...gamePlayers, newPlayer]);
+                          }
+                        }}
+                      >
+                        {isAdded ? "\u2713 " : "+ "}{player}
+                      </Chip>
+                    );
+                  })}
+                </div>
               </FormGroup>
             </SectionCard>
 
