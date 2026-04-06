@@ -880,7 +880,8 @@ export const Analytics = () => {
                       if (isNaN(d.getTime())) return game.date;
                       const m = d.getMonth() + 1, day = d.getDate();
                       const h = d.getHours().toString().padStart(2,"0"), min = d.getMinutes().toString().padStart(2,"0");
-                      return game.date.includes("T") ? `${m}/${day} ${h}:${min}` : `${m}/${day}`;
+                      const yr = d.getFullYear();
+                      return game.date.includes("T") ? `${yr}/${m}/${day} ${h}:${min}` : `${yr}/${m}/${day}`;
                     })()}</DateLabel>
                     <HistoryContent>
                       <HistoryWinner>
