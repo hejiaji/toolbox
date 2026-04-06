@@ -365,6 +365,7 @@ const GameMeta = styled.div`
 const GameDate = styled.div`
   font-size: 0.85rem;
   color: #5f6368;
+  white-space: nowrap;
 `;
 
 const GameWinner = styled.div`

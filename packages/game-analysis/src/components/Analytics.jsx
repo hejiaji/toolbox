@@ -321,6 +321,7 @@ const DateLabel = styled.div`
   font-size: 0.85rem;
   color: ${MD3_COLORS.secondary};
   font-weight: 500;
+  white-space: nowrap;
 `;
 
 const HistoryContent = styled.div`
