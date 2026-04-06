@@ -360,6 +360,7 @@ const GameMeta = styled.div`
   align-items: center;
   gap: 12px;
   flex: 1;
+  flex-wrap: wrap;
 `;
 
 const GameDate = styled.div`
@@ -373,6 +374,7 @@ const GameWinner = styled.div`
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 600;
+  white-space: nowrap;
   ${(props) => {
     if (props.winner === "wolf") {
       return `
@@ -403,6 +405,7 @@ const PlayerChip = styled.div`
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 0.8rem;
+  white-space: nowrap;
 `;
 
 const PlayerChipName = styled.span`
@@ -420,6 +423,8 @@ const GameActionsContainer = styled.div`
   display: flex;
   gap: 8px;
   align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
 `;
 
 const GameDeleteButton = styled.button`
