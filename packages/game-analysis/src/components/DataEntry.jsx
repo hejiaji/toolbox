@@ -484,7 +484,10 @@ export const DataEntry = () => {
   // State
   const [data, setData] = useState(loadData());
   const [activeTab, setActiveTab] = useState("record");
-  const [gameDate, setGameDate] = useState("");
+  const [gameDate, setGameDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
   const [gameMode, setGameMode] = useState(GAME_MODES.STANDARD);
   const [gameWinner, setGameWinner] = useState(WINNING_FACTIONS.WOLF);
   const [gamePlayers, setGamePlayers] = useState([]);
@@ -614,7 +617,8 @@ export const DataEntry = () => {
 
     const newData = addGame(gameRecord);
     setData(newData);
-    setGameDate("");
+    const now = new Date();
+    setGameDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
     setGameMode(GAME_MODES.STANDARD);
     setGameWinner(WINNING_FACTIONS.WOLF);
     setGamePlayers([]);
@@ -712,7 +716,7 @@ export const DataEntry = () => {
               <FormGroup>
                 <Label>日期</Label>
                 <DatePickerInput
-                  type="date"
+                  type="datetime-local"
                   value={gameDate}
                   onChange={(e) => setGameDate(e.target.value)}
                 />
