@@ -486,7 +486,8 @@ const formatGameDate = (dateStr) => {
   const hours = d.getHours().toString().padStart(2, "0");
   const mins = d.getMinutes().toString().padStart(2, "0");
   const year = d.getFullYear();
-  return dateStr.includes("T") ? `${year}/${month}/${day} ${hours}:${mins}` : `${year}/${month}/${day}`;
+  const hasTime = dateStr.includes("T") || dateStr.includes(" ") || hours !== "00" || mins !== "00";
+  return hasTime ? `${year}/${month}/${day} ${hours}:${mins}` : `${year}/${month}/${day}`;
 };
 
 // MAIN COMPONENT
