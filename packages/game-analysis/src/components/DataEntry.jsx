@@ -510,6 +510,7 @@ export const DataEntry = () => {
 
   // Edit game state
   const [editingGameId, setEditingGameId] = useState(null);
+  const [editDate, setEditDate] = useState("");
   const [editWinner, setEditWinner] = useState("");
   const [editMode, setEditMode] = useState(GAME_MODES.STANDARD);
   const [editPlayers, setEditPlayers] = useState([]);
@@ -518,6 +519,7 @@ export const DataEntry = () => {
 
   const startEditGame = (game) => {
     setEditingGameId(game.id);
+    setEditDate(game.date || "");
     setEditWinner(game.winner);
     setEditMode(game.mode || GAME_MODES.STANDARD);
     setEditPlayers(game.players.map((p) => ({ ...p })));
@@ -531,6 +533,7 @@ export const DataEntry = () => {
 
   const saveEditGame = () => {
     const newData = updateGame(editingGameId, {
+      date: editDate,
       winner: editWinner,
       mode: editMode,
       players: editPlayers,
@@ -975,7 +978,12 @@ export const DataEntry = () => {
                             /* ---- EDIT MODE ---- */
                             <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
                               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                                <GameDate>{formatGameDate(game.date)}</GameDate>
+                                <DatePickerInput
+                                  type="datetime-local"
+                                  value={editDate}
+                                  onChange={(e) => setEditDate(e.target.value)}
+                                  style={{ fontSize: "0.85rem", padding: "4px 8px", borderRadius: "8px", width: "auto", flex: "0 0 auto" }}
+                                />
                                 <Select value={editWinner} onChange={(e) => setEditWinner(e.target.value)} style={{ fontSize: "0.85rem", padding: "4px 8px", borderRadius: "8px" }}>
                                   <option value={WINNING_FACTIONS.WOLF}>🐺 狼人胜</option>
                                   <option value={WINNING_FACTIONS.VILLAGE}>🏘️ 好人胜</option>
