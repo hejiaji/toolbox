@@ -193,12 +193,14 @@ export const syncFromSheets = async () => {
                     }
                     return rg;
                 });
-            // Only keep local-only games that were created very recently (< 60s ago)
-            // This preserves games just recorded (background sync hasn't completed)
+            // Only keep local-only games that were created or updated very recently (< 60s ago)
+            // This preserves games just recorded/edited (background sync hasn't completed)
             // but drops stale local data that was deleted from Sheets
             const now = Date.now();
             const localOnlyGames = (local.games || []).filter((g) => {
                 if (mergedGameIds.has(g.id) || deletedIds.has(g.id)) return false;
+                // Keep if recently updated
+                if (g._updatedAt && (now - g._updatedAt) < 120000) return true;
                 // Parse creation timestamp from id (format: g_{timestamp}_xxxxx)
                 const match = g.id && g.id.match(/^g_(\d+)_/);
                 if (match) {
@@ -320,10 +322,16 @@ export const updateGame = (gameId, updates) => {
     const idx = data.games.findIndex((g) => g.id === gameId);
     if (idx === -1) return data;
     data.games[idx] = { ...data.games[idx], ...updates };
+    // Mark with a recent timestamp so sync won't drop it
+    data.games[idx]._updatedAt = Date.now();
     saveData(data);
     // Re-sync to sheets: delete old + add updated
     backgroundSync(async () => {
-        await sheetDeleteGame(gameId);
+        try {
+            await sheetDeleteGame(gameId);
+        } catch {
+            // ignore delete failure
+        }
         await sheetAddGame(data.games[idx]);
     });
     return data;
