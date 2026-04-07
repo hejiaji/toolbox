@@ -241,6 +241,7 @@ const SyncInput = () => {
             .then((remote) => {
                 if (remote.updatedAt) {
                     lastServerUpdatedAt.current = remote.updatedAt;
+                    lastKnownContent.current = remote.noteValue;
                     setNoteValue(remote.noteValue);
                     setLastSavedAt(remote.updatedAt);
                     saveStoredState({ noteValue: remote.noteValue, lastSavedAt: remote.updatedAt });
@@ -260,6 +261,7 @@ const SyncInput = () => {
             try {
                 const result = await pushNote(value);
                 lastServerUpdatedAt.current = result.updatedAt;
+                lastKnownContent.current = value;
                 setLastSavedAt(result.updatedAt);
                 saveStoredState({ noteValue: value, lastSavedAt: result.updatedAt });
                 setSyncStatus("live");
@@ -281,6 +283,7 @@ const SyncInput = () => {
     }, [noteValue, pushToServer]);
 
     // -- Poll server for remote changes --
+    const lastKnownContent = useRef("");
     useEffect(() => {
         const intervalId = setInterval(async () => {
             if (isPushing.current) {
@@ -288,14 +291,13 @@ const SyncInput = () => {
             }
             try {
                 const remote = await fetchNote();
-                if (
-                    remote.updatedAt &&
-                    remote.updatedAt !== lastServerUpdatedAt.current
-                ) {
+                const remoteValue = remote.noteValue || "";
+                if (remoteValue !== lastKnownContent.current) {
+                    lastKnownContent.current = remoteValue;
                     lastServerUpdatedAt.current = remote.updatedAt;
-                    setNoteValue(remote.noteValue);
+                    setNoteValue(remoteValue);
                     setLastSavedAt(remote.updatedAt);
-                    saveStoredState({ noteValue: remote.noteValue, lastSavedAt: remote.updatedAt });
+                    saveStoredState({ noteValue: remoteValue, lastSavedAt: remote.updatedAt });
                 }
                 setSyncStatus("live");
             } catch {
