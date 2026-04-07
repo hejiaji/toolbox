@@ -144,7 +144,7 @@ const PreviewRow = styled.div`
 
 const STORAGE_KEY = "toolbox.syncInput";
 const NOTE_ID = "default";
-const POLL_INTERVAL_MS = 4000;
+const POLL_INTERVAL_MS = 2000;
 
 const loadStoredState = () => {
     if (typeof window === "undefined") {
@@ -302,7 +302,6 @@ const SyncInput = () => {
             try {
                 const remote = await fetchNote();
                 const remoteValue = remote.noteValue || "";
-                console.log("[poll] remote:", JSON.stringify(remoteValue).slice(0, 50), "local:", JSON.stringify(lastKnownContent.current).slice(0, 50), "match:", remoteValue === lastKnownContent.current);
                 if (remoteValue !== lastKnownContent.current) {
                     lastKnownContent.current = remoteValue;
                     lastServerUpdatedAt.current = remote.updatedAt;
@@ -311,8 +310,7 @@ const SyncInput = () => {
                     saveStoredState({ noteValue: remoteValue, lastSavedAt: remote.updatedAt });
                 }
                 setSyncStatus("live");
-            } catch (err) {
-                console.log("[poll] error:", err);
+            } catch {
                 setSyncStatus("offline");
             }
         }, POLL_INTERVAL_MS);
