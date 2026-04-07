@@ -226,6 +226,7 @@ const SyncInput = () => {
     // Guard to pause polling while a local push is in-flight or edits are pending.
     const isPushing = useRef(false);
     const hasPendingEdits = useRef(false);
+    const isUserEdit = useRef(false);
 
     // -- Bootstrap: load from localStorage first (instant), then fetch remote --
     useEffect(() => {
@@ -276,10 +277,12 @@ const SyncInput = () => {
     );
 
     useEffect(() => {
+        if (!isUserEdit.current) return;
         hasPendingEdits.current = true;
         const timeoutId = setTimeout(() => {
             pushToServer(noteValue).then(() => {
                 hasPendingEdits.current = false;
+                isUserEdit.current = false;
             });
         }, 800);
 
@@ -355,7 +358,7 @@ const SyncInput = () => {
                         <div>
                             <TextArea
                                 value={noteValue}
-                                onChange={(event) => setNoteValue(event.target.value)}
+                                onChange={(event) => { isUserEdit.current = true; setNoteValue(event.target.value); }}
                                 placeholder="Paste or type here"
                                 autoSize={{ minRows: 6, maxRows: 12 }}
                             />
