@@ -302,6 +302,7 @@ const SyncInput = () => {
             try {
                 const remote = await fetchNote();
                 const remoteValue = remote.noteValue || "";
+                console.log("[poll] remote:", JSON.stringify(remoteValue).slice(0, 50), "local:", JSON.stringify(lastKnownContent.current).slice(0, 50), "match:", remoteValue === lastKnownContent.current);
                 if (remoteValue !== lastKnownContent.current) {
                     lastKnownContent.current = remoteValue;
                     lastServerUpdatedAt.current = remote.updatedAt;
@@ -310,7 +311,8 @@ const SyncInput = () => {
                     saveStoredState({ noteValue: remoteValue, lastSavedAt: remote.updatedAt });
                 }
                 setSyncStatus("live");
-            } catch {
+            } catch (err) {
+                console.log("[poll] error:", err);
                 setSyncStatus("offline");
             }
         }, POLL_INTERVAL_MS);
