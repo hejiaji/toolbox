@@ -301,6 +301,13 @@ const HistoryList = styled.div`
   gap: 12px;
 `;
 
+const AccordionBody = styled.div`
+  max-height: ${(props) => (props.isOpen ? "800px" : "0")};
+  opacity: ${(props) => (props.isOpen ? 1 : 0)};
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+`;
+
 const HistoryCard = styled.div`
   background-color: ${MD3_COLORS.white};
   border-radius: 16px;
@@ -911,7 +918,7 @@ export const Analytics = () => {
                         </span>
                       </HistoryWinner>
                     </HistoryContent>
-                    {isExpanded && (
+                    <AccordionBody isOpen={isExpanded}>
                       <div style={{ marginTop: "12px", borderTop: "1px solid #e8eaed", paddingTop: "12px" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "8px" }}>
                           {game.players.map((player, idx) => {
@@ -961,7 +968,7 @@ export const Analytics = () => {
                           })}
                         </div>
                       </div>
-                    )}
+                    </AccordionBody>
                   </HistoryCard>
                 );
               })}
