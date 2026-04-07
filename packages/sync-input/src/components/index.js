@@ -223,8 +223,9 @@ const SyncInput = () => {
     // Track the last updatedAt we know about from the server so we can skip
     // no-op polls and avoid overwriting local edits.
     const lastServerUpdatedAt = useRef(null);
-    // Guard to pause polling while a local push is in-flight.
+    // Guard to pause polling while a local push is in-flight or edits are pending.
     const isPushing = useRef(false);
+    const hasPendingEdits = useRef(false);
 
     // -- Bootstrap: load from localStorage first (instant), then fetch remote --
     useEffect(() => {
@@ -275,8 +276,11 @@ const SyncInput = () => {
     );
 
     useEffect(() => {
+        hasPendingEdits.current = true;
         const timeoutId = setTimeout(() => {
-            pushToServer(noteValue);
+            pushToServer(noteValue).then(() => {
+                hasPendingEdits.current = false;
+            });
         }, 800);
 
         return () => clearTimeout(timeoutId);
@@ -286,7 +290,7 @@ const SyncInput = () => {
     const lastKnownContent = useRef("");
     useEffect(() => {
         const intervalId = setInterval(async () => {
-            if (isPushing.current) {
+            if (isPushing.current || hasPendingEdits.current) {
                 return;
             }
             try {
