@@ -24,8 +24,8 @@ export const fetchNote = async (noteId) => {
         throw new Error("Google Sheets is not configured.");
     }
 
-    const url = `${APPS_SCRIPT_URL}?action=getNote&id=${encodeURIComponent(noteId)}`;
-    const res = await fetch(url);
+    const url = `${APPS_SCRIPT_URL}?action=getNote&id=${encodeURIComponent(noteId)}&_t=${Date.now()}`;
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
         throw new Error(`Apps Script error (${res.status}): ${await res.text()}`);
     }
