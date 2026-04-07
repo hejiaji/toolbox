@@ -739,6 +739,7 @@ export const DataEntry = () => {
                 <Label>日期</Label>
                 <DatePickerInput
                   type="datetime-local"
+                  lang="zh-CN"
                   value={gameDate}
                   onChange={(e) => setGameDate(e.target.value)}
                 />
@@ -1004,6 +1005,7 @@ export const DataEntry = () => {
                               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
                                 <DatePickerInput
                                   type="datetime-local"
+                                  lang="zh-CN"
                                   value={editDate}
                                   onChange={(e) => setEditDate(e.target.value)}
                                   style={{ fontSize: "0.85rem", padding: "4px 8px", borderRadius: "8px", width: "auto", flex: "0 0 auto" }}
