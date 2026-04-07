@@ -227,6 +227,7 @@ const SyncInput = () => {
     const isPushing = useRef(false);
     const hasPendingEdits = useRef(false);
     const isUserEdit = useRef(false);
+    const lastPushTime = useRef(0);
 
     // -- Bootstrap: load from localStorage first (instant), then fetch remote --
     useEffect(() => {
@@ -264,6 +265,7 @@ const SyncInput = () => {
                 const result = await pushNote(value);
                 lastServerUpdatedAt.current = result.updatedAt;
                 lastKnownContent.current = value;
+                lastPushTime.current = Date.now();
                 setLastSavedAt(result.updatedAt);
                 saveStoredState({ noteValue: value, lastSavedAt: result.updatedAt });
                 setSyncStatus("live");
@@ -293,7 +295,8 @@ const SyncInput = () => {
     const lastKnownContent = useRef("");
     useEffect(() => {
         const intervalId = setInterval(async () => {
-            if (isPushing.current || hasPendingEdits.current) {
+            // Skip polling while pushing, editing, or within 5s of last push
+            if (isPushing.current || hasPendingEdits.current || (Date.now() - lastPushTime.current < 5000)) {
                 return;
             }
             try {
