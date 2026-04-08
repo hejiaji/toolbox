@@ -306,6 +306,7 @@ const AccordionBody = styled.div`
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
   overflow: hidden;
   transition: max-height 0.35s ease, opacity 0.25s ease;
+  grid-column: 1 / -1;
 `;
 
 const HistoryCard = styled.div`
@@ -314,7 +315,7 @@ const HistoryCard = styled.div`
   padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
   display: grid;
-  grid-template-columns: 100px 1fr auto;
+  grid-template-columns: 100px 1fr;
   gap: 16px;
   align-items: center;
 
