@@ -10,6 +10,7 @@ const TOOL_ITEMS = [
         description: "记录每局游戏结果，管理玩家名单与历史数据。",
         tag: "游戏记录",
         accent: "#7c3aed",
+        emoji: "🐺",
     },
     {
         path: "/game-analysis/analytics",
@@ -17,6 +18,7 @@ const TOOL_ITEMS = [
         description: "查看整体胜率、角色表现与玩家统计数据。",
         tag: "数据分析",
         accent: "#5b21b6",
+        emoji: "📊",
     },
     {
         path: "/who-goes-first",
@@ -24,6 +26,7 @@ const TOOL_ITEMS = [
         description: "Break ties and pick the next driver, speaker, or owner in seconds.",
         tag: "Decision helper",
         accent: "#e76f37",
+        emoji: "🎲",
     },
     {
         path: "/sharding",
@@ -31,6 +34,7 @@ const TOOL_ITEMS = [
         description: "Calculate shard keys and split strategies without the guesswork.",
         tag: "Infra utility",
         accent: "#1f6e9b",
+        emoji: "🔀",
     },
     {
         path: "/downloader",
@@ -38,6 +42,7 @@ const TOOL_ITEMS = [
         description: "Queue batch pulls and keep assets moving in the background.",
         tag: "Batch tool",
         accent: "#8a5cc7",
+        emoji: "⬇️",
     },
     {
         path: "/sync-input",
@@ -45,6 +50,7 @@ const TOOL_ITEMS = [
         description: "Paste once, retrieve anywhere. A shared notebook for quick text sync.",
         tag: "Sync notebook",
         accent: "#cf6d2a",
+        emoji: "📋",
     },
     {
         path: "/video",
@@ -52,6 +58,7 @@ const TOOL_ITEMS = [
         description: "Your personal Netflix-style video library. Browse, search and watch your collection.",
         tag: "Video library",
         accent: "#c0392b",
+        emoji: "🎬",
     },
 ];
 
@@ -62,8 +69,60 @@ const INTERNAL_ITEMS = [
         description: "Assemble a clean narrative for yearly highlights and milestones.",
         tag: "Story builder",
         accent: "#2b8f7a",
+        emoji: "📰",
     },
 ];
+
+const ALL_ITEMS = [...TOOL_ITEMS, ...INTERNAL_ITEMS];
+
+const DEFAULT_TITLE = "Toolbox";
+
+function setEmojiFavicon(emoji) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    ctx.font = "56px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(emoji, 32, 36);
+
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+    }
+    link.href = canvas.toDataURL("image/png");
+}
+
+function resetFavicon() {
+    let link = document.querySelector("link[rel~='icon']");
+    if (link) {
+        link.href = "/favicon.ico";
+    }
+}
+
+function useDocumentMeta(pathname) {
+    useEffect(() => {
+        const match = ALL_ITEMS.find((item) =>
+            pathname === item.path || (item.path !== "/" && pathname.startsWith(item.path + "/"))
+        );
+
+        if (match) {
+            document.title = `${match.title} — Toolbox`;
+            setEmojiFavicon(match.emoji);
+        } else {
+            document.title = DEFAULT_TITLE;
+            resetFavicon();
+        }
+
+        return () => {
+            document.title = DEFAULT_TITLE;
+            resetFavicon();
+        };
+    }, [pathname]);
+}
 
 const ToolIndex = () => {
     const [internalOpen, setInternalOpen] = useState(false);
@@ -162,6 +221,8 @@ const AppLayout = () => {
     useEffect(() => {
         trackPageView(location.pathname);
     }, [location]);
+
+    useDocumentMeta(location.pathname);
     const showTopBar = location.pathname !== "/" && !location.pathname.startsWith("/video");
     const showIndex = location.pathname === "/";
     const isVideo = location.pathname.startsWith("/video");
