@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import styled from "styled-components";
 import { useParams, useHistory } from "react-router-dom";
 import videojs from "video.js";
@@ -214,9 +214,50 @@ const NotFound = styled.div`
   font-size: 1.1rem;
 `;
 
+const SEEK_SECONDS = 15;
+
+const PlayerWrapper = styled.div`
+  position: relative;
+`;
+
+const SeekToast = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  z-index: 5;
+  opacity: ${(p) => (p.visible ? 1 : 0)};
+  transform: translate(-50%, -50%) scale(${(p) => (p.visible ? 1 : 0.9)});
+  transition: opacity 200ms ease, transform 200ms ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+`;
+
 const VideoPlayerInner = ({ src }) => {
   const videoRef = useRef(null);
   const playerRef = useRef(null);
+  const toastTimeoutRef = useRef(null);
+  const [toast, setToast] = useState({ visible: false, text: "" });
+
+  const showToast = useCallback((text) => {
+    setToast({ visible: true, text });
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, visible: false }));
+    }, 700);
+  }, []);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -235,10 +276,88 @@ const VideoPlayerInner = ({ src }) => {
     };
   }, [src]);
 
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const isTypingTarget = (target) => {
+      if (!target) return false;
+      const tag = (target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return true;
+      if (target.isContentEditable) return true;
+      return false;
+    };
+
+    const handleKeyDown = (e) => {
+      const player = playerRef.current;
+      if (!player) return;
+      // Don't hijack keys while the user is typing in an input.
+      if (isTypingTarget(e.target)) return;
+      // Ignore when modifier keys are held so we don't override browser shortcuts.
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const currentTime =
+        typeof player.currentTime === "function" ? player.currentTime() : 0;
+      const duration =
+        typeof player.duration === "function" ? player.duration() : 0;
+
+      switch (e.key) {
+        case "ArrowRight":
+        case "l":
+        case "L": {
+          const target = duration
+            ? Math.min(duration, currentTime + SEEK_SECONDS)
+            : currentTime + SEEK_SECONDS;
+          player.currentTime(target);
+          showToast(`⏩ +${SEEK_SECONDS}s`);
+          e.preventDefault();
+          break;
+        }
+        case "ArrowLeft":
+        case "j":
+        case "J": {
+          const target = Math.max(0, currentTime - SEEK_SECONDS);
+          player.currentTime(target);
+          showToast(`⏪ -${SEEK_SECONDS}s`);
+          e.preventDefault();
+          break;
+        }
+        case " ":
+        case "k":
+        case "K": {
+          if (player.paused()) {
+            player.play();
+            showToast("▶ Play");
+          } else {
+            player.pause();
+            showToast("⏸ Pause");
+          }
+          e.preventDefault();
+          break;
+        }
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showToast]);
+
   return (
-    <div data-vjs-player>
-      <video ref={videoRef} className="video-js vjs-big-play-centered" playsInline />
-    </div>
+    <PlayerWrapper>
+      <div data-vjs-player>
+        <video ref={videoRef} className="video-js vjs-big-play-centered" playsInline />
+      </div>
+      <SeekToast visible={toast.visible} aria-live="polite">
+        {toast.text}
+      </SeekToast>
+    </PlayerWrapper>
   );
 };
 
