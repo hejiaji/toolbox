@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { useHistory } from "react-router-dom";
+import { getVideoLengthLabel, getVideoSource } from "../library";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -229,7 +230,8 @@ const HeroBanner = ({ video }) => {
         <Title>{video.title}</Title>
         <Meta>
           <span>{video.year}</span>
-          <span>{video.duration}</span>
+          <span>{getVideoLengthLabel(video)}</span>
+          {!getVideoSource(video) && <span>Coming soon</span>}
           <span>{video.category}</span>
         </Meta>
         <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
@@ -237,9 +239,11 @@ const HeroBanner = ({ video }) => {
         </div>
         <Description>{video.description}</Description>
         <Buttons>
-          <PlayButton onClick={() => history.push(`/video/${video.id}`)}>
-            ▶ Play Now
-          </PlayButton>
+          {getVideoSource(video) && (
+            <PlayButton onClick={() => history.push(`/video/${video.id}`)}>
+              ▶ Play Now
+            </PlayButton>
+          )}
           <InfoButton onClick={() => history.push(`/video/${video.id}`)}>
             ℹ More Info
           </InfoButton>

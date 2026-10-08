@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useHistory } from "react-router-dom";
+import { getVideoLengthLabel, getVideoSource } from "../library";
 
 const Card = styled.div`
   position: relative;
@@ -129,6 +130,12 @@ const Meta = styled.div`
   margin-top: 0.15rem;
 `;
 
+const Availability = styled.div`
+  color: #e6b96d;
+  font-size: 0.72rem;
+  margin-top: 0.3rem;
+`;
+
 const VideoCard = ({ video }) => {
   const history = useHistory();
   const [imgError, setImgError] = useState(false);
@@ -154,12 +161,13 @@ const VideoCard = ({ video }) => {
         )}
       </Thumbnail>
       <Overlay>
-        <PlayBtn>▶ Play</PlayBtn>
+        <PlayBtn>{getVideoSource(video) ? "▶ Play" : "ℹ More Info"}</PlayBtn>
         <OverlayDesc>{video.description}</OverlayDesc>
       </Overlay>
       <Info>
         <Title>{video.title}</Title>
-        <Meta>{video.year} · {video.duration}</Meta>
+        <Meta>{video.year} · {getVideoLengthLabel(video)}</Meta>
+        {!getVideoSource(video) && <Availability>Coming soon</Availability>}
       </Info>
     </Card>
   );

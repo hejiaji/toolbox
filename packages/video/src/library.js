@@ -88,7 +88,41 @@ export const VIDEO_LIBRARY = [
     duration: "4h 25m",
     tags: ["Show"],
     featured: true,
-  }
+  },
+  {
+    id: "hero-2001",
+    title: "HERO",
+    description:
+      "An unconventional prosecutor brings his own approach to Tokyo's justice system, winning over his skeptical colleagues as he investigates difficult cases. A Japanese drama starring Takuya Kimura and Takako Matsu.",
+    category: "TV Shows",
+    thumbnail: "https://fujicreative.co.jp/forBuyers/wp-content/uploads/2022/06/2_0223.jpg",
+    episodes: Array.from({ length: 10 }, (_, index) => {
+      const number = index + 1;
+      return {
+        number,
+        title: `Episode ${number}`,
+        src: `https://jeremy-he-video.s3.ap-southeast-2.amazonaws.com/%E5%BE%8B%E6%94%BF%E8%8B%B1%E9%9B%84.E${String(number).padStart(2, "0")}.x264.AAC.HDRepair.Bilibili%E7%96%AF%E7%8B%82%E8%80%81%E4%B9%94%E7%94%BB%E8%B4%A8%E4%BF%AE%E5%A4%8D%E7%89%88.mp4`,
+      };
+    }),
+    year: 2001,
+    episodeCount: 11,
+    tags: ["Japanese", "Drama", "Legal", "Mystery"],
+    imdbUrl: "https://www.imdb.com/title/tt0288960/",
+    featured: false,
+  },
 ];
 
 export const CATEGORIES = ["Movies", "TV Shows"];
+
+export const getPlayableEpisodes = (video) =>
+  (video.episodes || []).filter((episode) => episode.src);
+
+export const getVideoSource = (video) =>
+  getPlayableEpisodes(video)[0]?.src || video.src;
+
+export const getVideoLengthLabel = (video) =>
+  video.episodes?.length
+    ? `${getPlayableEpisodes(video).length} episodes available`
+    : video.episodeCount
+      ? `${video.episodeCount} episodes`
+      : video.duration;

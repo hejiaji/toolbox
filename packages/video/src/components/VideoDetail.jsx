@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import styled from "styled-components";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams, useHistory, useLocation } from "react-router-dom";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import { VIDEO_LIBRARY } from "../library";
+import { VIDEO_LIBRARY, getPlayableEpisodes, getVideoSource, getVideoLengthLabel } from "../library";
 
 const Page = styled.div`
   background: #141414;
@@ -53,6 +53,51 @@ const PlayerSection = styled.div`
     width: 100%;
     max-height: 72vh;
     aspect-ratio: 16 / 9;
+  }
+`;
+
+const EpisodeControls = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  color: #ccc;
+
+  select {
+    max-width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #fff;
+    font: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  select:focus-visible {
+    outline: 2px solid #e50914;
+    outline-offset: 2px;
+  }
+`;
+
+const UnavailablePlayer = styled.div`
+  padding: 5rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+
+  h2 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 0 0 0.75rem;
+  }
+
+  p {
+    color: #ccc;
+    margin: 0;
   }
 `;
 
@@ -364,6 +409,7 @@ const VideoPlayerInner = ({ src }) => {
 const VideoDetail = () => {
   const { id } = useParams();
   const history = useHistory();
+  const location = useLocation();
 
   const video = VIDEO_LIBRARY.find((v) => v.id === id);
 
@@ -378,6 +424,17 @@ const VideoDetail = () => {
     );
   }
 
+  const episodes = getPlayableEpisodes(video);
+  const requestedEpisode = new URLSearchParams(location.search).get("episode");
+  const selectedEpisode = episodes.find((episode) => String(episode.number) === requestedEpisode) || episodes[0];
+  const playbackSrc = selectedEpisode ? selectedEpisode.src : getVideoSource(video);
+
+  const selectEpisode = (event) => {
+    const params = new URLSearchParams(location.search);
+    params.set("episode", event.target.value);
+    history.replace({ ...location, search: `?${params.toString()}` });
+  };
+
   const suggestions = VIDEO_LIBRARY.filter(
     (v) => v.id !== video.id && v.category === video.category
   ).slice(0, 6);
@@ -390,7 +447,25 @@ const VideoDetail = () => {
       </TopBar>
 
       <PlayerSection>
-        <VideoPlayerInner key={video.src} src={video.src} />
+        {selectedEpisode && (
+          <EpisodeControls>
+            <label htmlFor="episode-selector">Episode</label>
+            <select id="episode-selector" value={selectedEpisode.number} onChange={selectEpisode}>
+              {episodes.map((episode) => (
+                <option key={episode.number} value={episode.number}>{episode.title}</option>
+              ))}
+            </select>
+            <span>{episodes.length} available</span>
+          </EpisodeControls>
+        )}
+        {playbackSrc ? (
+          <VideoPlayerInner key={playbackSrc} src={playbackSrc} />
+        ) : (
+          <UnavailablePlayer>
+            <h2>{video.category === "TV Shows" ? "Episodes coming soon" : "Video coming soon"}</h2>
+            <p>Playback will be available once videos are added.</p>
+          </UnavailablePlayer>
+        )}
       </PlayerSection>
 
       <InfoSection>
@@ -398,7 +473,12 @@ const VideoDetail = () => {
         <MetaRow>
           <CategoryBadge>{video.category}</CategoryBadge>
           <span>{video.year}</span>
-          <span>{video.duration}</span>
+          <span>{getVideoLengthLabel(video)}</span>
+          {video.imdbUrl && (
+            <a href={video.imdbUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#ccc", textDecoration: "underline" }}>
+              View on IMDb ↗
+            </a>
+          )}
         </MetaRow>
         <TagsRow>
           {video.tags.map((t) => (
@@ -425,6 +505,7 @@ const VideoDetail = () => {
                     🎬<span>No Thumbnail</span>
                   </SuggThumbFallback>
                   <div>{s.title}</div>
+                  {!getVideoSource(s) && <div style={{ color: "#e6b96d" }}>Coming soon</div>}
                 </SuggCard>
               ))}
             </SuggestionsGrid>
