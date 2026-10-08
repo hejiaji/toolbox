@@ -539,7 +539,19 @@ export const DataEntry = () => {
     setEditingGameId(null);
   };
 
+  const removeEditPlayer = (index) => {
+    const removed = editPlayers[index];
+    setEditPlayers((prev) => prev.filter((_, i) => i !== index));
+    setEditMvps((prev) => prev.filter((name) => name !== removed.name));
+    setEditScapegoats((prev) => prev.filter((name) => name !== removed.name));
+  };
+
   const saveEditGame = () => {
+    if (editPlayers.length === 0) {
+      message.error("请至少保留一名玩家");
+      return;
+    }
+
     const newData = updateGame(editingGameId, {
       date: editDate,
       winner: editWinner,
@@ -1021,7 +1033,7 @@ export const DataEntry = () => {
                               </div>
                               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                                 {editPlayers.map((p, idx) => (
-                                  <div key={idx} style={{ display: "flex", gap: "6px", alignItems: "center", background: "#f8f9fa", borderRadius: "8px", padding: "6px 10px" }}>
+                                  <div key={idx} style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", background: "#f8f9fa", borderRadius: "8px", padding: "6px 10px" }}>
                                     <span style={{ fontWeight: 500, minWidth: "60px", fontSize: "0.85rem" }}>{p.name}</span>
                                     <select
                                       value={p.role}
@@ -1074,6 +1086,14 @@ export const DataEntry = () => {
                                         </Select>
                                       );
                                     })()}
+                                    <DeleteButton
+                                      type="button"
+                                      onClick={() => removeEditPlayer(idx)}
+                                      aria-label={`从本局移除 ${p.name}`}
+                                      title={`从本局移除 ${p.name}`}
+                                    >
+                                      <DeleteOutlined />
+                                    </DeleteButton>
                                   </div>
                                 ))}
                               </div>
